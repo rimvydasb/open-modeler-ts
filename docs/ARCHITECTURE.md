@@ -1,6 +1,14 @@
-# Business Logic Execution: ai() Method Bridge
+# Open Modeler TS Architecture Document
 
-Sequence diagram for secure JS execution via QuickJS VM and LLM bridge.
+## Master Business Case
+
+1. User can edit and save business logic scripts edited in a code editor (e.g. CodeMirror) within the React Flow
+   low-code environment. Example of the script: [example-loan-return.ts](example-loan-return.ts)
+2. Script is the project. Multiple projects can be stored in IndexedDB and listed in the landing page.
+3. The script is parsed to the higher level OpenModel Project AST (using ts-morph) to generate the graph in the React
+   Flow editor. Flow editor changes are serialized back to the script and saved in IndexedDB.
+4. Script can be executed in a secure sandbox (QuickJS). Depending on hooks in the script, the sandbox can call out to
+   the host environment to fetch data or call an LLM, or render graph or output table in the UI.
 
 ## Stack
 
