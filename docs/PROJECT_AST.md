@@ -702,8 +702,8 @@ interface StoredProject {
 - **Node Display:** Parameters become input ports, and the return type becomes the output port. Rendered as a ReactFlow
   node. Input ports are always on the left side, and output ports on the right side. In the same line as a port, the
   parameter name and type are displayed (e.g. `loanAmount: number`).
-- **Node Edit:** separate edit page is opened with CodeMirror for the function body. Parameters and return type are
-  edited via a form UI. Changes to the body are parsed back to update the AST and re-derive the graph.
+- **Node Edit:** (`code-editor`) separate edit page is opened with CodeMirror for the function body. Parameters and
+  return type are edited via a form UI. Changes to the body are parsed back to update the AST and re-derive the graph.
 
 ### Chart Node
 
@@ -711,6 +711,14 @@ interface StoredProject {
 - **Node Display:** based on the data either a line/bar chart or a pie chart is rendered in the ReactFlow node. MUI X
   Charts are used for rendering.
 - **Node Edit:** none, TBC (maybe change chart type via dropdown in the node)
+
+### Flow Node
+
+- **Node Type:** flow
+- **Node Display:** the very root node is not displayed as a node, because this is ReactFlow's definition. If other
+  functions are tagged as `@nodeType flow`, they will be treated as a sub-graph and will be rendered as `Function Node`.
+  Root node must be called `main()` and will be the entry point for execution.
+- **Node Edit:** (`flow-editor`) ReactFlow page
 
 # Architect Comments
 
