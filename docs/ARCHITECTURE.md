@@ -1,5 +1,7 @@
 # Open Modeler TS Architecture Document
 
+Project is in design phase.
+
 ## Master Business Case
 
 1. User can edit and save business logic scripts edited in a code editor (e.g. CodeMirror) within the React Flow

@@ -10,7 +10,7 @@
 
 /**
  * @displayName Payment Line
- * @nodeType list
+ * @visible none
  */
 interface PaymentLine {
     paymentDate: Date;
@@ -22,6 +22,7 @@ interface PaymentLine {
 
 /**
  * @displayName Input Variables
+ * @nodeType list
  */
 const INPUT_VARIABLES = {
     loanAmount: 100000,
