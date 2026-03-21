@@ -108,6 +108,7 @@ classDiagram
 
     class DeclarationBase {
         +id: string
+        +assetId: string
         +name: string
         +displayName: string | undefined
         +nodeType: NodeType | undefined
@@ -344,6 +345,8 @@ Common fields shared by all declaration kinds.
 interface DeclarationBase {
     /** Unique identifier derived from the declaration name. */
     id: string;
+    /** The ID of the ProjectAsset where this declaration is defined. */
+    assetId: string;
     /** The declaration name as written in source (e.g. "calculateMonthlyPayment"). */
     name: string;
     /** Human-readable label from @displayName JSDoc tag. */
@@ -703,9 +706,9 @@ structures.
 
 ```mermaid
 graph LR
-    subgraph ParsingPipeline["Parsing Pipeline (Source → AST)"]
+    subgraph ParsingPipeline["Parsing Pipeline (Assets → AST)"]
         direction TB
-        SRC["TypeScript Source<br/>(string)"]
+        SRC["ProjectAsset[]"]
         JDP["JsDocExtractor"]
         TR["TypeResolver"]
         CGA["CallGraphAnalyzer"]
@@ -722,14 +725,14 @@ graph LR
         direction TB
         AST_IN["ProjectAST"]
         ASTSER["AstSerializer"]
-        SRC_OUT["TypeScript Source<br/>(string)"]
+        SRC_OUT["TypeScript Source<br/>(string updates)"]
         AST_IN --> ASTSER
         ASTSER --> SRC_OUT
     end
 
-    subgraph TranspilationPipeline["Transpilation Pipeline (Source → Executable JS)"]
+    subgraph TranspilationPipeline["Transpilation Pipeline (Assets → Executable JS)"]
         direction TB
-        TS_IN["TypeScript Source"]
+        TS_IN["ProjectAsset[]"]
         TRANS["Transpiler"]
         HOOK_RW["HookRewriter"]
         JS_OUT["JavaScript<br/>(QuickJS-ready)"]
@@ -756,14 +759,18 @@ The top-level orchestrator for the parsing pipeline.
 
 ```typescript
 /**
- * Parses a TypeScript source string into a ProjectAST.
+ * Parses project assets into a unified ProjectAST.
  * Delegates to sub-components for JSDoc extraction, type resolution, and call analysis.
  * Stateless — produces a fresh ProjectAST on every invocation.
+ * 
+ * MVP Limitation: Acts as a "Project Compiler" but currently only takes the FIRST asset 
+ * with `kind: 'source'` (or 'typescript') and ignores the rest. True multi-file module 
+ * resolution is deferred.
  */
-function parseSource(source: string): ProjectAST;
+function parseProject(assets: ProjectAsset[]): ProjectAST;
 ```
 
-**Test strategy:** Input/output pairs. Provide TypeScript strings, assert the resulting `ProjectAST` structure.
+**Test strategy:** Input/output pairs. Provide arrays of `ProjectAsset`, assert the resulting `ProjectAST` structure includes the correct `assetId`.
 
 #### JsDocExtractor
 
@@ -849,13 +856,15 @@ interface TranspileResult {
 }
 
 /**
- * Transpiles TypeScript source to JavaScript using ts-morph emit.
+ * Transpiles project assets to JavaScript using ts-morph emit.
  * Strips type annotations, resolves enums, preserves async/await.
+ *
+ * MVP Limitation: Currently only transpiles the first asset with `kind: 'source'`.
  */
-function transpileSource(source: string): TranspileResult;
+function transpileProject(assets: ProjectAsset[]): TranspileResult;
 ```
 
-**Test strategy:** Transpile known TypeScript inputs, assert the output is valid JavaScript. Verify type annotations
+**Test strategy:** Transpile known `ProjectAsset` arrays, assert the output is valid JavaScript. Verify type annotations
 are stripped, async functions are preserved, and hook imports are rewritten.
 
 #### HookRewriter

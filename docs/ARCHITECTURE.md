@@ -394,11 +394,11 @@ open-modeler-ts/
 │   │   │           └── typescript-importer.test.ts
 │   │   │
 │   │   ├── ast/                              # ── Service 3: AST Parsing ──
-│   │   │   ├── index.ts                      # Public API: parseSource, serializeAst, transpileSource
+│   │   │   ├── index.ts                      # Public API: parseProject, serializeAst, transpileProject
 │   │   │   ├── parsers/
 │   │   │   │   ├── parser-interface.ts       # Abstract parser contract (for future Python, JS parsers)
 │   │   │   │   └── typescript/               # ts-morph implementation
-│   │   │   │       ├── source-parser.ts      # Orchestrator: parseSource(source: string): ProjectAST
+│   │   │   │       ├── source-parser.ts      # Orchestrator: parseProject(assets: ProjectAsset[]): ProjectAST
 │   │   │   │       ├── jsdoc-extractor.ts    # extractJsDoc(): @nodeType, @displayName, @visible
 │   │   │   │       ├── type-resolver.ts      # resolveType(): ts-morph Type → TypeReference
 │   │   │   │       └── call-graph-analyzer.ts# analyzeCallGraph(): extract call expressions
@@ -406,7 +406,7 @@ open-modeler-ts/
 │   │   │   │   ├── serializer-interface.ts   # Abstract serializer contract
 │   │   │   │   └── ast-serializer.ts         # serializeAst(ast: ProjectAST): string
 │   │   │   ├── transpilers/
-│   │   │   │   ├── transpiler.ts             # transpileSource(): TS → JS for QuickJS
+│   │   │   │   ├── transpiler.ts             # transpileProject(): Assets → JS for QuickJS
 │   │   │   │   └── hook-rewriter.ts          # rewriteHookImports(): @openmodeler/hooks → openmodeler:hooks
 │   │   │   ├── types/                        # AST type definitions (implements 03-AST-PARSING.md spec)
 │   │   │   │   ├── project-ast-types.ts      # ProjectAST, Declaration, DeclarationBase
@@ -830,16 +830,12 @@ phased delivery. If no, move `AstSerializer` and `FlowGraphSync` into MVP scope.
 
 #### 2. Single-file parser vs. multi-asset project model
 
-The AST parser signature is `parseSource(source: string): ProjectAST` — it processes **one source string**. But the
-`StoredProject` type defines `assets: ProjectAsset[]` — a project can have multiple TypeScript files (`source`,
-`types.ts`, utilities, services).
+The AST parser signature was updated to `parseProject(assets: ProjectAsset[]): ProjectAST` to handle multi-file contexts. However, there is a strict **MVP Limitation**: it currently only transpiles and parses the **first** asset with `kind: 'source'` (or 'typescript') and ignores the rest. 
 
 **Unresolved questions:**
 
-- Does each `.ts` asset get its own `ProjectAST`? If so, how are cross-file type references resolved?
-- Or is there a designated "main" source file, with other assets treated as auxiliary data?
-- How does `types.ts` (a separate asset) integrate with the main source's AST? The types extractor (Service 2)
-  "extracts interfaces from source via AST service" — but from which source?
+- When full multi-file support is implemented, how are cross-file type references resolved?
+- How does `types.ts` (a separate asset) integrate with the main source's AST in the MVP? The types extractor (Service 2) "extracts interfaces from source via AST service" — but does it pass only the `types.ts` asset or the whole project?
 
 **Decision required:** Define the relationship between `ProjectAsset[]` and `ProjectAST`. Suggested approach: designate
 one `source` asset as the "main" entry point that gets parsed. Types from `types.ts` are injected into the parser

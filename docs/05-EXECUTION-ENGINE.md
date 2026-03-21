@@ -134,7 +134,7 @@ sequenceDiagram
 interface EngineInterface {
     createSandbox(): Promise<SandboxHandle>;
     registerHooks(sandbox: SandboxHandle, callbacks: HookCallbacks): void;
-    execute(sandbox: SandboxHandle, js: string, inputs: Record<string, unknown>): Promise<ExecutionResult>;
+    execute(sandbox: SandboxHandle, js: string, inputs: Record<string, unknown>, assets?: ProjectAsset[]): Promise<ExecutionResult>;
     dispose(sandbox: SandboxHandle): void;
 }
 
@@ -196,6 +196,8 @@ between runs).
 Resolves the `openmodeler:hooks` virtual module import within the QuickJS VM. When the guest script imports from
 `@openmodeler/hooks`, the hook rewriter (Service 3) rewrites it to `openmodeler:hooks`, and this resolver provides
 the module with host-bound function references.
+
+It is also designed to resolve local `./` imports from the `ProjectAsset[]` array, enabling multi-file projects where scripts can import utility functions or data from other assets in the project.
 
 **Test strategy (Jest):** Verify module resolution produces callable hook functions.
 
