@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "es2022"
-    ],
+    "lib": ["dom", "dom.iterable", "es2022"],
     "allowJs": false,
     "skipLibCheck": true,
     "strict": true,
@@ -18,18 +14,10 @@
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "edge-rules": [
-        "public/pkg-web/edge_rules"
-      ]
+      "@/*": ["./src/*"],
+      "edge-rules": ["public/pkg-web/edge_rules"]
     },
-    "types": [
-      "node",
-      "jest",
-      "@testing-library/jest-dom"
-    ],
+    "types": ["node", "jest", "@testing-library/jest-dom"],
     "incremental": true,
     "plugins": [
       {
@@ -47,7 +35,5 @@
     "dist/types/**/*.ts",
     "dist/dev/types/**/*.ts"
   ],
-  "exclude": [
-    "node_modules"
-  ]
+  "exclude": ["node_modules"]
 }

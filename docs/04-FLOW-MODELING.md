@@ -15,7 +15,7 @@ applying visual editor mutations (node additions, edge changes, parameter edits)
 This service has two distinct layers with fundamentally different testing strategies:
 
 | Layer               | Directory                                 | Testing | Responsibility                      |
-|---------------------|-------------------------------------------|---------|-------------------------------------|
+| ------------------- | ----------------------------------------- | ------- | ----------------------------------- |
 | Data transformation | `lib/flow/`                               | Jest    | AST ↔ FlowGraph pure conversion     |
 | React UI            | `components/nodes/`, `views/flow-editor/` | Cypress | ReactFlow rendering and interaction |
 
@@ -94,7 +94,7 @@ classDiagram
 
 The flow graph is **scoped** to a specific flow function (the `targetFlowId`). It is derived from the `ProjectAST` (defined in [03-AST-PARSING.md](03-AST-PARSING.md)) using these rules:
 
-1. **Graph Scope:** The builder starts at the function defined by `targetFlowId` (which defaults to the AST's `rootFlowId`). 
+1. **Graph Scope:** The builder starts at the function defined by `targetFlowId` (which defaults to the AST's `rootFlowId`).
 2. **Nodes:** The builder analyzes the code body of the target flow function. In a flow function, each line of code typically follows the pattern `{variable} = {function}({args})`. For every function called within the body, a ReactFlow node is generated. The `id`, `displayName` (or `name`), and `nodeType` map directly to the called function's declaration.
 3. **Edges (Data Flow):** Edges are derived from the `CallExpression` relationships and variable assignments within the target flow function's body. By parsing which output `{variable}` is passed as `{args}` into subsequent functions, the builder knows exactly which output pin connects to which input pin.
 4. **Ports:** Input ports are derived from `ParameterInfo[]` and output ports from `returnType`. Port type labels come from `TypeReference.name`.
@@ -135,12 +135,12 @@ The flow editor renders a fixed set of node types. Each node type has a correspo
 
 - **Component (Sub-Flow):** `components/nodes/subflow-node/subflow-node.tsx`
 - **Node Type:** `flow`
-- **Display:** 
-  - **Root Flow:** If a function (e.g., `main()`) is tagged with `@nodeType flow` and acts as the root flow, it is **not** rendered as a visible node. Instead, it defines the root ReactFlow canvas itself.
-  - **Sub-Flow Node:** If other functions are tagged with `@nodeType flow` (i.e., they are not the root flow), they are rendered as a `<SubFlowNode>`.
-- **Edit:** 
-  - **Root Flow:** Users interact with the ReactFlow canvas directly in the flow editor view (`views/flow-editor/`).
-  - **Sub-Flow Node:** Interacting with a `<SubFlowNode>` will navigate into and open another ReactFlow canvas specifically for that sub-graph.
+- **Display:**
+    - **Root Flow:** If a function (e.g., `main()`) is tagged with `@nodeType flow` and acts as the root flow, it is **not** rendered as a visible node. Instead, it defines the root ReactFlow canvas itself.
+    - **Sub-Flow Node:** If other functions are tagged with `@nodeType flow` (i.e., they are not the root flow), they are rendered as a `<SubFlowNode>`.
+- **Edit:**
+    - **Root Flow:** Users interact with the ReactFlow canvas directly in the flow editor view (`views/flow-editor/`).
+    - **Sub-Flow Node:** Interacting with a `<SubFlowNode>` will navigate into and open another ReactFlow canvas specifically for that sub-graph.
 
 ### `<ListNode>` — `list`
 
@@ -168,8 +168,8 @@ interface FlowGraph {
  * Builds a scoped ReactFlow graph from a ProjectAST starting from a specific flow function.
  * - targetFlowId: The ID of the flow function to render (from the route /#flow/:projectId/:targetFlowId).
  *   If omitted or "root", defaults to the AST's `rootFlowId`.
- * 
- * Traverses the Call Graph starting from the target flow function, deriving edges 
+ *
+ * Traverses the Call Graph starting from the target flow function, deriving edges
  * from CallExpressions within that function's body.
  */
 function buildFlowGraph(ast: ProjectAST, targetFlowId?: string): FlowGraph;
@@ -184,13 +184,13 @@ Applies flow editor mutations back to the project's source files. This is the re
 
 ```typescript
 type FlowMutation =
-    | { type: 'move-node'; nodeId: string; position: { x: number; y: number } }
-    | { type: 'add-edge'; sourceId: string; targetId: string }
-    | { type: 'remove-edge'; edgeId: string }
-    | { type: 'update-parameter'; functionId: string; paramIndex: number; update: Partial<ParameterInfo> }
-    | { type: 'add-node'; nodeType: NodeType; name: string; position: { x: number; y: number } }
-    | { type: 'remove-node'; nodeId: string }
-    | { type: 'rename-node'; nodeId: string; newName: string };
+    | {type: 'move-node'; nodeId: string; position: {x: number; y: number}}
+    | {type: 'add-edge'; sourceId: string; targetId: string}
+    | {type: 'remove-edge'; edgeId: string}
+    | {type: 'update-parameter'; functionId: string; paramIndex: number; update: Partial<ParameterInfo>}
+    | {type: 'add-node'; nodeType: NodeType; name: string; position: {x: number; y: number}}
+    | {type: 'remove-node'; nodeId: string}
+    | {type: 'rename-node'; nodeId: string; newName: string};
 
 /**
  * Applies a list of flow editor mutations to the underlying TypeScript source.
@@ -221,7 +221,7 @@ function layoutFlowGraph(graph: FlowGraph): FlowGraph;
 interface FlowNode {
     id: string;
     type: NodeType;
-    position: { x: number; y: number };
+    position: {x: number; y: number};
     parentId?: string; // Used to visually nest nodes within sub-flows
     data: {
         declaration: Declaration;

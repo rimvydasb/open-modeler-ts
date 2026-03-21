@@ -53,11 +53,11 @@ The EdgeRules Modeler is a Single Page Application (SPA) that utilizes **Hash-ba
 
 - **Router**: The main entry point in `app/page.tsx` acts as a dynamic router, switching between different views based on the URL hash.
 - **Hash Format**: The application uses a structured hash pattern: `#[view]/[projectId]/[subView]`.
-  - Examples:
-    - `#flow/project-id`: Opens the Flow Editor for a specific project.
-    - `#boxed/project-id`: Opens the Boxed Expressions Editor.
-    - `#code/project-id`: Opens the Code Editor.
-    - `#workspace`: Navigates to the user's project workspace.
+    - Examples:
+        - `#flow/project-id`: Opens the Flow Editor for a specific project.
+        - `#boxed/project-id`: Opens the Boxed Expressions Editor.
+        - `#code/project-id`: Opens the Code Editor.
+        - `#workspace`: Navigates to the user's project workspace.
 - **Hook**: The custom `useHashRoute` hook in `hooks/use-hash-route.ts` monitors `hashchange` events and parses the current view state.
 - **View Components**: Instead of Next.js pages, features are organized into "Views" under `components/views/`. These are swapped dynamically within `app/page.tsx`.
 - **Layouts**: The router wraps views in either `LandingLayout` or `ProjectLayout` based on the context, providing consistent navigation bars and toolbars.

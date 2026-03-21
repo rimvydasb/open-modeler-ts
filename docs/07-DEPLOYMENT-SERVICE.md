@@ -156,14 +156,14 @@ sequenceDiagram
 interface DeploymentConfig {
     projectId: string;
     targetId: string;
-    environment: string;               // "development" | "staging" | "production"
+    environment: string; // "development" | "staging" | "production"
     buildOptions: Record<string, string>;
 }
 
 interface DeploymentTarget {
     id: string;
-    name: string;                      // e.g. "Vercel", "AWS Lambda"
-    type: string;                      // e.g. "vercel", "aws-lambda"
+    name: string; // e.g. "Vercel", "AWS Lambda"
+    type: string; // e.g. "vercel", "aws-lambda"
     validate(config: DeploymentConfig): ValidationResult;
     prepare(project: StoredProject, envVars: EnvironmentVariable[]): Promise<PreparedBundle>;
     deploy(bundle: PreparedBundle): Promise<DeploymentResult>;
@@ -172,9 +172,9 @@ interface DeploymentTarget {
 interface DeploymentResult {
     targetId: string;
     status: 'success' | 'failed' | 'cancelled';
-    url?: string;                      // Deployed URL (if applicable)
+    url?: string; // Deployed URL (if applicable)
     errorMessage?: string;
-    deployedAt: string;                // ISO 8601
+    deployedAt: string; // ISO 8601
 }
 
 interface EnvironmentConfig {
@@ -185,7 +185,7 @@ interface EnvironmentConfig {
 interface EnvironmentVariable {
     key: string;
     value: string;
-    isSecret: boolean;                 // If true, value is masked in UI
+    isSecret: boolean; // If true, value is masked in UI
 }
 ```
 
@@ -209,6 +209,7 @@ CRUD operations for environment variables. Manages per-project, per-environment 
 ### Deployment Targets (`targets/`)
 
 Each target implements `DeploymentTarget`:
+
 - **VercelTarget** (future) — bundles the project and deploys via Vercel API
 - **AwsLambdaTarget** (future) — packages as Lambda function and deploys via AWS SDK
 

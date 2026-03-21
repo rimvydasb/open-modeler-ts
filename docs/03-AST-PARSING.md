@@ -59,11 +59,11 @@ graph TB
     IDB -- " save / load " --> CE
     CE -- " TypeScript Source " --> TSM
     TSM -- " parses into " --> AST
-    
+
     AST -- " maps signatures to ports " --> FGB
     FGB -- " FlowGraph (Nodes & Edges) " --> FE
     FE -- " mutations (round-trip) " --> AST
-    
+
     AST -- " transpiles " --> TRANS
     TRANS -- " Executable JS " --> VM_PREP
     AST -- " provides signatures " --> VM_PREP
@@ -422,11 +422,7 @@ interface TypeAliasDeclaration extends DeclarationBase {
 The discriminated union of all declaration kinds.
 
 ```typescript
-type Declaration =
-    | FunctionDeclaration
-    | InterfaceDeclaration
-    | ConstantDeclaration
-    | TypeAliasDeclaration;
+type Declaration = FunctionDeclaration | InterfaceDeclaration | ConstantDeclaration | TypeAliasDeclaration;
 ```
 
 ## Project AST (Root)
@@ -476,31 +472,31 @@ const projectAST: ProjectAST = {
                     name: 'paymentDate',
                     type: {kind: 'primitive', name: 'Date', typeArguments: [], isArray: false, isNullable: false},
                     isOptional: false,
-                    isReadonly: false
+                    isReadonly: false,
                 },
                 {
                     name: 'amount',
                     type: {kind: 'primitive', name: 'number', typeArguments: [], isArray: false, isNullable: false},
                     isOptional: false,
-                    isReadonly: false
+                    isReadonly: false,
                 },
                 {
                     name: 'principalPaid',
                     type: {kind: 'primitive', name: 'number', typeArguments: [], isArray: false, isNullable: false},
                     isOptional: false,
-                    isReadonly: false
+                    isReadonly: false,
                 },
                 {
                     name: 'interestPaid',
                     type: {kind: 'primitive', name: 'number', typeArguments: [], isArray: false, isNullable: false},
                     isOptional: false,
-                    isReadonly: false
+                    isReadonly: false,
                 },
                 {
                     name: 'remainingBalance',
                     type: {kind: 'primitive', name: 'number', typeArguments: [], isArray: false, isNullable: false},
                     isOptional: false,
-                    isReadonly: false
+                    isReadonly: false,
                 },
             ],
         },
@@ -519,25 +515,25 @@ const projectAST: ProjectAST = {
                     name: 'loanAmount',
                     type: {kind: 'primitive', name: 'number', typeArguments: [], isArray: false, isNullable: false},
                     isOptional: false,
-                    isReadonly: false
+                    isReadonly: false,
                 },
                 {
                     name: 'annualInterestRate',
                     type: {kind: 'primitive', name: 'number', typeArguments: [], isArray: false, isNullable: false},
                     isOptional: false,
-                    isReadonly: false
+                    isReadonly: false,
                 },
                 {
                     name: 'termMonths',
                     type: {kind: 'primitive', name: 'number', typeArguments: [], isArray: false, isNullable: false},
                     isOptional: false,
-                    isReadonly: false
+                    isReadonly: false,
                 },
                 {
                     name: 'startDate',
                     type: {kind: 'reference', name: 'Date', typeArguments: [], isArray: false, isNullable: false},
                     isOptional: false,
-                    isReadonly: false
+                    isReadonly: false,
                 },
             ],
         },
@@ -548,23 +544,24 @@ const projectAST: ProjectAST = {
             displayName: 'Calculate Monthly Payment',
             nodeType: 'function',
             visible: true,
-            documentation: 'Calculates the fixed monthly payment for a loan based on the principal, annual interest rate, and loan term in months.',
+            documentation:
+                'Calculates the fixed monthly payment for a loan based on the principal, annual interest rate, and loan term in months.',
             sourceRange: {startLine: 44, endLine: 49, startColumn: 1, endColumn: 2},
             parameters: [
                 {
                     name: 'principal',
                     type: {kind: 'primitive', name: 'number', typeArguments: [], isArray: false, isNullable: false},
-                    isOptional: false
+                    isOptional: false,
                 },
                 {
                     name: 'annualRate',
                     type: {kind: 'primitive', name: 'number', typeArguments: [], isArray: false, isNullable: false},
-                    isOptional: false
+                    isOptional: false,
                 },
                 {
                     name: 'months',
                     type: {kind: 'primitive', name: 'number', typeArguments: [], isArray: false, isNullable: false},
-                    isOptional: false
+                    isOptional: false,
                 },
             ],
             returnType: {kind: 'primitive', name: 'number', typeArguments: [], isArray: false, isNullable: false},
@@ -585,27 +582,27 @@ const projectAST: ProjectAST = {
                 {
                     name: 'loanAmount',
                     type: {kind: 'primitive', name: 'number', typeArguments: [], isArray: false, isNullable: false},
-                    isOptional: false
+                    isOptional: false,
                 },
                 {
                     name: 'monthlyPayment',
                     type: {kind: 'primitive', name: 'number', typeArguments: [], isArray: false, isNullable: false},
-                    isOptional: false
+                    isOptional: false,
                 },
                 {
                     name: 'annualInterestRate',
                     type: {kind: 'primitive', name: 'number', typeArguments: [], isArray: false, isNullable: false},
-                    isOptional: false
+                    isOptional: false,
                 },
                 {
                     name: 'termMonths',
                     type: {kind: 'primitive', name: 'number', typeArguments: [], isArray: false, isNullable: false},
-                    isOptional: false
+                    isOptional: false,
                 },
                 {
                     name: 'startDate',
                     type: {kind: 'reference', name: 'Date', typeArguments: [], isArray: false, isNullable: false},
-                    isOptional: false
+                    isOptional: false,
                 },
             ],
             returnType: {kind: 'reference', name: 'PaymentLine', typeArguments: [], isArray: true, isNullable: false},
@@ -626,7 +623,7 @@ const projectAST: ProjectAST = {
                 {
                     name: 'schedule',
                     type: {kind: 'reference', name: 'PaymentLine', typeArguments: [], isArray: true, isNullable: false},
-                    isOptional: false
+                    isOptional: false,
                 },
             ],
             returnType: {kind: 'void', name: 'void', typeArguments: [], isArray: false, isNullable: false},
@@ -647,7 +644,7 @@ const projectAST: ProjectAST = {
                 {
                     name: 'schedule',
                     type: {kind: 'reference', name: 'PaymentLine', typeArguments: [], isArray: true, isNullable: false},
-                    isOptional: false
+                    isOptional: false,
                 },
             ],
             returnType: {kind: 'void', name: 'void', typeArguments: [], isArray: false, isNullable: false},
@@ -672,7 +669,7 @@ const projectAST: ProjectAST = {
                 {targetName: 'calculateMonthlyPayment', arguments: ['loanAmount', 'annualInterestRate', 'termMonths']},
                 {
                     targetName: 'generateLoanSchedule',
-                    arguments: ['loanAmount', 'monthlyPayment', 'annualInterestRate', 'termMonths', 'startDate']
+                    arguments: ['loanAmount', 'monthlyPayment', 'annualInterestRate', 'termMonths', 'startDate'],
                 },
                 {targetName: 'renderLoanBalanceChart', arguments: ['schedule']},
                 {targetName: 'renderLoanScheduleTable', arguments: ['schedule']},
@@ -691,13 +688,13 @@ During AST construction, the parser determines the `rootFlowId` and `modelType` 
 
 1. **Find all flow nodes:** Locate all declarations tagged with `@nodeType flow`.
 2. **Determine Root:**
-   - If a flow node is named `main`, it is designated as the root flow (`rootFlowId = 'main'`). All other flow nodes are treated as nested sub-flows.
-   - If there is no `main` function, but exactly *one* flow node exists, that single node is designated as the root flow.
-   - If there are no flow nodes at all, but a `main` function exists (even without the `@nodeType flow` tag), `main` is designated as the root flow.
-   - If there is no `main` function and *multiple* flow nodes exist, the parser throws an error (ambiguous entry point).
+    - If a flow node is named `main`, it is designated as the root flow (`rootFlowId = 'main'`). All other flow nodes are treated as nested sub-flows.
+    - If there is no `main` function, but exactly _one_ flow node exists, that single node is designated as the root flow.
+    - If there are no flow nodes at all, but a `main` function exists (even without the `@nodeType flow` tag), `main` is designated as the root flow.
+    - If there is no `main` function and _multiple_ flow nodes exist, the parser throws an error (ambiguous entry point).
 3. **Determine Model Type:**
-   - If the root flow function has **no arguments**, `modelType` is set to `'workbook'`. This indicates a script that can be immediately executed (e.g., just paints graphs or runs a static pipeline).
-   - If the root flow function **has arguments**, `modelType` is set to `'service'`. This indicates a decision service that requires external input values to execute (e.g., via the Testing Service).
+    - If the root flow function has **no arguments**, `modelType` is set to `'workbook'`. This indicates a script that can be immediately executed (e.g., just paints graphs or runs a static pipeline).
+    - If the root flow function **has arguments**, `modelType` is set to `'service'`. This indicates a decision service that requires external input values to execute (e.g., via the Testing Service).
 
 ## Parser Components Architecture
 
@@ -745,7 +742,7 @@ graph LR
     end
 
     style ParsingPipeline fill: #e3f2fd, stroke: #1565c0
-    style SerializationPipeline fill: #fff3e0, stroke: #e65100
+    style MutationPipeline fill: #fff3e0, stroke: #e65100
     style TranspilationPipeline fill: #fce4ec, stroke: #c62828
 ```
 
@@ -767,9 +764,9 @@ The top-level orchestrator for the parsing pipeline.
  * Parses project assets into a unified ProjectAST.
  * Delegates to sub-components for JSDoc extraction, type resolution, and call analysis.
  * Stateless — produces a fresh ProjectAST on every invocation.
- * 
- * MVP Limitation: Acts as a "Project Compiler" but currently only takes the FIRST asset 
- * with `kind: 'source'` (or 'typescript') and ignores the rest. True multi-file module 
+ *
+ * MVP Limitation: Acts as a "Project Compiler" but currently only takes the FIRST asset
+ * with `kind: 'source'` (or 'typescript') and ignores the rest. True multi-file module
  * resolution is deferred.
  */
 function parseProject(assets: ProjectAsset[]): ProjectAST;
@@ -823,10 +820,7 @@ Extracts function call relationships from function bodies.
  * Analyzes a function body to extract all call expressions that reference
  * top-level declared functions. Ignores method calls, built-ins, and chains.
  */
-function analyzeCallGraph(
-    functionBody: ts.Block,
-    knownFunctionNames: Set<string>
-): CallExpression[];
+function analyzeCallGraph(functionBody: ts.Block, knownFunctionNames: Set<string>): CallExpression[];
 ```
 
 **Test strategy:** Provide function bodies with various call patterns (simple calls, chained calls, nested calls,
@@ -883,244 +877,3 @@ function rewriteHookImports(javascript: string): string;
 ```
 
 **Test strategy:** Provide JS with various import styles, assert correct rewriting.
-
-## Hooks System Architecture
-
-Hooks are the bridge between user-authored business logic (running inside the QuickJS sandbox) and the host SPA
-environment. They enable scripts to push data to the UI and to make external requests.
-
-### Hook Categories
-
-```mermaid
-graph TB
-    subgraph ScriptEnvironment["QuickJS Sandbox"]
-        SCRIPT["User Script"]
-    end
-
-    subgraph PushHooks["Push Hooks (Script → Host)"]
-        direction LR
-        CHART["chart()"]
-        TABLE["table()"]
-        LOG["log()"]
-    end
-
-    subgraph BidirectionalHooks["Bidirectional Hooks (Script ↔ Host)"]
-        direction LR
-        AI["ai()"]
-        FETCH["fetch()"]
-    end
-
-    subgraph HostEnvironment["SPA Host"]
-        REACT["React State<br/>(App Preview)"]
-        TSQ2["TanStack Query"]
-        CONSOLE["Execution Console"]
-    end
-
-    subgraph External["External"]
-        LLM2["LLM Endpoint"]
-        API["HTTP APIs"]
-    end
-
-    SCRIPT --> CHART --> REACT
-    SCRIPT --> TABLE --> REACT
-    SCRIPT --> LOG --> CONSOLE
-    SCRIPT -- " await " --> AI -- " suspend VM " --> TSQ2 --> LLM2
-    LLM2 --> TSQ2 --> AI -- " resume VM " --> SCRIPT
-    SCRIPT -- " await " --> FETCH -- " suspend VM " --> TSQ2 --> API
-    API --> TSQ2 --> FETCH -- " resume VM " --> SCRIPT
-    style ScriptEnvironment fill: #fff3e0, stroke: #e65100
-    style PushHooks fill: #e8f5e9, stroke: #2e7d32
-    style BidirectionalHooks fill: #e3f2fd, stroke: #1565c0
-    style HostEnvironment fill: #f3e5f5, stroke: #6a1b9a
-    style External fill: #fce4ec, stroke: #c62828
-```
-
-### Hook Usage in Scripts
-
-Hooks are imported as a standard ES module. The import statement is recognized by the parser and rewritten by the
-`HookRewriter` during transpilation. In the user's TypeScript source, hooks look like ordinary typed function calls:
-
-```typescript
-import {chart, table, log, ai} from '@openmodeler/hooks';
-
-/**
- * @nodeType chart
- */
-function renderLoanBalanceChart(schedule: PaymentLine[]): void {
-    chart(schedule);
-}
-
-/**
- * @nodeType table
- */
-function renderLoanScheduleTable(schedule: PaymentLine[]): void {
-    table(schedule);
-}
-
-/**
- * @nodeType function
- */
-async function classifyRisk(customer: Customer): Promise<string> {
-    const result = await ai(`Classify risk for customer: ${JSON.stringify(customer)}`);
-    return result.text;
-}
-```
-
-### Hook Type Declarations (`@openmodeler/hooks`)
-
-This module is a **virtual module** — it has no physical file. Type declarations are provided for editor intellisense
-and type checking. At runtime in QuickJS, the module resolver intercepts the import and returns host-registered
-functions.
-
-```typescript
-// --- Push Hooks (fire-and-forget, script → host) ---
-
-/**
- * Push a dataset to render as a chart in App Preview.
- * The host infers chart type (line, bar, pie) from the data shape.
- *
- * @param data - Array of objects or a ChartConfig with explicit series/axis definitions.
- */
-export declare function chart(data: Record<string, unknown>[] | ChartConfig): void;
-
-/**
- * Push a dataset to render as a table in App Preview.
- * Column headers are derived from object keys.
- *
- * @param data - Array of objects representing table rows.
- */
-export declare function table(data: Record<string, unknown>[]): void;
-
-/**
- * Log a message to the execution console panel.
- * Supports structured data (objects are serialized to JSON).
- */
-export declare function log(...args: unknown[]): void;
-
-// --- Bidirectional Hooks (async request-response, script ↔ host) ---
-
-/**
- * Send a prompt to a configured AI/LLM endpoint and await the response.
- * The VM suspends while the host resolves the request via TanStack Query.
- *
- * @param prompt - The natural-language prompt to send.
- * @param options - Optional configuration (model, temperature, maxTokens).
- * @returns Parsed LLM response.
- */
-export declare function ai(prompt: string, options?: AiRequestOptions): Promise<AiResponse>;
-
-/**
- * Make an HTTP request through the host environment.
- * The VM suspends while the host resolves the request.
- * Restricted to configured allowlisted domains for security.
- *
- * @param url - The URL to fetch.
- * @param options - Standard request options (method, headers, body).
- * @returns Parsed response with status, headers, and body.
- */
-export declare function fetch(url: string, options?: FetchRequestOptions): Promise<FetchResponse>;
-```
-
-### Hook Supporting Types
-
-```typescript
-interface ChartConfig {
-    type: 'line' | 'bar' | 'pie';
-    title?: string;
-    xAxis?: string;
-    yAxis?: string;
-    series: ChartSeries[];
-}
-
-interface ChartSeries {
-    name: string;
-    dataKey: string;
-    color?: string;
-}
-
-interface AiRequestOptions {
-    model?: string;
-    temperature?: number;
-    maxTokens?: number;
-    responseFormat?: 'text' | 'json';
-}
-
-interface AiResponse {
-    text: string;
-    parsed?: unknown;
-    model: string;
-    usage: { promptTokens: number; completionTokens: number };
-}
-
-interface FetchRequestOptions {
-    method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
-    headers?: Record<string, string>;
-    body?: string | Record<string, unknown>;
-}
-
-interface FetchResponse {
-    status: number;
-    headers: Record<string, string>;
-    body: unknown;
-    text: string;
-}
-```
-
-### Hook Resolution at Runtime
-
-When the transpiled JavaScript is loaded into QuickJS, hook resolution follows this sequence:
-
-1. **HookRewriter** (build-time) — Rewrites `import { chart } from '@openmodeler/hooks'` into a
-   QuickJS-compatible `import` referencing the virtual module ID `openmodeler:hooks`.
-
-2. **Module Resolver** (runtime) — The QuickJS module resolver intercepts `openmodeler:hooks` and returns a module
-   object whose exports are host-registered functions.
-
-3. **Host Bridge** (runtime) — Each hook function is a thin wrapper that:
-    - For **push hooks**: serializes the argument, passes it to a host callback, and returns immediately.
-    - For **bidirectional hooks**: serializes the argument, passes it to a host callback that returns a QuickJS
-      Promise. The VM suspends until the host resolves or rejects the Promise.
-
-4. **Host Callback** (runtime) — On the SPA side:
-    - `chart()` / `table()` → update React state → triggers re-render of App Preview.
-    - `log()` → appends to the execution console buffer.
-    - `ai()` → calls `queryClient.fetchQuery()` → HTTP to LLM → resolves the QuickJS Promise.
-    - `fetch()` → calls `queryClient.fetchQuery()` → HTTP to API → resolves the QuickJS Promise.
-
-```mermaid
-sequenceDiagram
-    participant Script as User Script (QuickJS)
-    participant Resolver as Module Resolver
-    participant Bridge as Host Bridge
-    participant React as React State
-    participant TQ as TanStack Query
-    participant LLM as LLM Endpoint
-    Note over Script, Resolver: Module Loading
-    Script ->> Resolver: import { chart, ai } from 'openmodeler:hooks'
-    Resolver -->> Script: { chart: hostFn, ai: hostFn }
-    Note over Script, React: Push Hook — chart()
-    Script ->> Bridge: chart(data)
-    Bridge ->> React: setState(chartData)
-    React -->> React: Re-render App Preview
-    Note over Script, LLM: Bidirectional Hook — ai()
-    Script ->> Bridge: await ai(prompt)
-    Bridge ->> Bridge: VM suspends
-    Bridge ->> TQ: fetchQuery({ queryFn: llmCall })
-    TQ ->> LLM: POST /api/chat
-    LLM -->> TQ: JSON response
-    TQ -->> Bridge: resolved data
-    Bridge ->> Script: Promise resolved — VM resumes
-```
-
-### Hook Security Constraints
-
-- **No raw `globalThis` access** — hooks are the only way scripts interact with the host.
-- **Domain allowlist** — `fetch()` is restricted to domains configured in project settings.
-- **Timeout** — bidirectional hooks have a configurable timeout (default: 30s). If the host does not resolve within
-  the timeout, the Promise is rejected and the script receives an error.
-- **Payload size limit** — push hooks enforce a maximum serialized payload size to prevent memory exhaustion in the
-  host.
-
-# Architect Comments
-
-1. Rethink `initializer` - I have a doubt we will need it.

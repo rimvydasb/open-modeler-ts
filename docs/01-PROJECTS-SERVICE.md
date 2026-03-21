@@ -152,13 +152,13 @@ sequenceDiagram
 
 ```typescript
 interface StoredProject {
-    id: string;                        // UUID v4
-    name: string;                      // User-defined, unique within workspace
+    id: string; // UUID v4
+    name: string; // User-defined, unique within workspace
     description?: string;
-    tags: Record<string, string>;      // Arbitrary key-value metadata
-    assets: ProjectAssetMeta[];        // List of assets (metadata only, no content)
-    createdAt: string;                 // ISO 8601
-    updatedAt: string;                 // ISO 8601
+    tags: Record<string, string>; // Arbitrary key-value metadata
+    assets: ProjectAssetMeta[]; // List of assets (metadata only, no content)
+    createdAt: string; // ISO 8601
+    updatedAt: string; // ISO 8601
 }
 
 interface ProjectAssetMeta {
@@ -172,7 +172,7 @@ interface ProjectListItem {
     name: string;
     description?: string;
     updatedAt: string;
-    assetCount: number;                // Derived from assets.length
+    assetCount: number; // Derived from assets.length
 }
 
 interface CreateProjectInput {
@@ -202,6 +202,7 @@ Thin adapter between the service layer and the `StorageInterface`. Maps `StoredP
 ### ProjectsValidator (`projects-validator.ts`)
 
 Validates `CreateProjectInput` and update inputs. Enforces business rules:
+
 - Project name is required and non-empty
 - Project name is unique within the workspace (checked against existing projects list)
 - Name length and character constraints

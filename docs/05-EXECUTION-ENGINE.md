@@ -135,23 +135,29 @@ sequenceDiagram
 interface EngineInterface {
     createSandbox(): Promise<SandboxHandle>;
     registerHooks(sandbox: SandboxHandle, callbacks: HookCallbacks): void;
-    execute(sandbox: SandboxHandle, functionName: string, js: string, inputs: Record<string, unknown>, assets?: ProjectAsset[]): Promise<ExecutionResult>;
+    execute(
+        sandbox: SandboxHandle,
+        functionName: string,
+        js: string,
+        inputs: Record<string, unknown>,
+        assets?: ProjectAsset[],
+    ): Promise<ExecutionResult>;
     dispose(sandbox: SandboxHandle): void;
 }
 
 interface ExecutionResult {
-    output: unknown;                   // Function return value
-    hookOutputs: HookOutput[];         // All hook calls captured during execution
-    duration: number;                  // Execution time in ms
-    error?: ExecutionError;            // Set if script threw
+    output: unknown; // Function return value
+    hookOutputs: HookOutput[]; // All hook calls captured during execution
+    duration: number; // Execution time in ms
+    error?: ExecutionError; // Set if script threw
 }
 
 interface ExecutionContext {
     projectId: string;
     functionName: string;
     inputs: Record<string, unknown>;
-    timeout: number;                   // Max execution time in ms
-    allowedDomains: string[];          // For fetch() domain allowlist
+    timeout: number; // Max execution time in ms
+    allowedDomains: string[]; // For fetch() domain allowlist
 }
 
 interface HookCallbacks {
@@ -172,7 +178,7 @@ interface HookOutput {
 ## Hooks
 
 | Hook      | Category      | Direction     | Host Action                    |
-|-----------|---------------|---------------|--------------------------------|
+| --------- | ------------- | ------------- | ------------------------------ |
 | `chart()` | Push          | Script → Host | Update React state → re-render |
 | `table()` | Push          | Script → Host | Update React state → re-render |
 | `log()`   | Push          | Script → Host | Append to console buffer       |
@@ -180,7 +186,7 @@ interface HookOutput {
 | `fetch()` | Bidirectional | Script ↔ Host | TanStack Query → HTTP API      |
 
 > Hook type definitions (`ChartConfig`, `AiRequestOptions`, etc.) and the `@openmodeler/hooks` virtual module
-> are specified in [03-AST-PARSING.md — Hooks System Architecture](03-AST-PARSING.md#hooks-system-architecture).
+> are specified in the [Hooks System Architecture](#hooks-system-architecture) below.
 
 ## Components
 
@@ -188,6 +194,14 @@ interface HookOutput {
 
 Implements `EngineInterface` using `quickjs-emscripten`. Manages VM lifecycle: WASM initialization, context creation,
 script evaluation, and disposal. Each execution creates an isolated heap with no shared state.
+
+#### WASM Loading Strategy (SSG Compatibility)
+
+Because the application is deployed as an SSG on S3, the `quickjs-emscripten` WASM binary cannot be loaded via a dynamic server route.
+
+1. **Asset Location:** The WASM binary (`.wasm` file) must be placed in the `public/pkg-quickjs/` directory so it is exported statically.
+2. **Initialization:** During the first call to `createSandbox()`, the engine must explicitly configure the `quickjs-emscripten` loader to fetch the WASM binary using a standard browser `fetch()` call pointed at the `/pkg-quickjs/` path.
+3. **Caching:** The loaded WASM module is cached in memory for the lifetime of the SPA session so subsequent executions are fast.
 
 **Test strategy (Jest):** Execute known scripts, assert return values. Verify sandbox isolation (globals don't leak
 between runs).
@@ -241,3 +255,244 @@ which performs the operation (via TanStack Query), then resumes the script with 
 
 > For file structure, see
 > [ARCHITECTURE.md — Proposed Project Component Structure](ARCHITECTURE.md#proposed-project-component-structure).
+
+## Hooks System Architecture
+
+Hooks are the bridge between user-authored business logic (running inside the QuickJS sandbox) and the host SPA
+environment. They enable scripts to push data to the UI and to make external requests.
+
+### Hook Categories
+
+```mermaid
+graph TB
+    subgraph ScriptEnvironment["QuickJS Sandbox"]
+        SCRIPT["User Script"]
+    end
+
+    subgraph PushHooks["Push Hooks (Script → Host)"]
+        direction LR
+        CHART["chart()"]
+        TABLE["table()"]
+        LOG["log()"]
+    end
+
+    subgraph BidirectionalHooks["Bidirectional Hooks (Script ↔ Host)"]
+        direction LR
+        AI["ai()"]
+        FETCH["fetch()"]
+    end
+
+    subgraph HostEnvironment["SPA Host"]
+        REACT["React State<br/>(App Preview)"]
+        TSQ2["TanStack Query"]
+        CONSOLE["Execution Console"]
+    end
+
+    subgraph External["External"]
+        LLM2["LLM Endpoint"]
+        API["HTTP APIs"]
+    end
+
+    SCRIPT --> CHART --> REACT
+    SCRIPT --> TABLE --> REACT
+    SCRIPT --> LOG --> CONSOLE
+    SCRIPT -- " await " --> AI -- " suspend VM " --> TSQ2 --> LLM2
+    LLM2 --> TSQ2 --> AI -- " resume VM " --> SCRIPT
+    SCRIPT -- " await " --> FETCH -- " suspend VM " --> TSQ2 --> API
+    API --> TSQ2 --> FETCH -- " resume VM " --> SCRIPT
+    style ScriptEnvironment fill: #fff3e0, stroke: #e65100
+    style PushHooks fill: #e8f5e9, stroke: #2e7d32
+    style BidirectionalHooks fill: #e3f2fd, stroke: #1565c0
+    style HostEnvironment fill: #f3e5f5, stroke: #6a1b9a
+    style External fill: #fce4ec, stroke: #c62828
+```
+
+### Hook Usage in Scripts
+
+Hooks are imported as a standard ES module. The import statement is recognized by the parser and rewritten by the
+`HookRewriter` during transpilation. In the user's TypeScript source, hooks look like ordinary typed function calls:
+
+```typescript
+import {chart, table, log, ai} from '@openmodeler/hooks';
+
+/**
+ * @nodeType chart
+ */
+function renderLoanBalanceChart(schedule: PaymentLine[]): void {
+    chart(schedule);
+}
+
+/**
+ * @nodeType table
+ */
+function renderLoanScheduleTable(schedule: PaymentLine[]): void {
+    table(schedule);
+}
+
+/**
+ * @nodeType function
+ */
+async function classifyRisk(customer: Customer): Promise<string> {
+    const result = await ai(`Classify risk for customer: ${JSON.stringify(customer)}`);
+    return result.text;
+}
+```
+
+### Hook Type Declarations (`@openmodeler/hooks`)
+
+This module is a **virtual module** — it has no physical file. Type declarations are provided for editor intellisense
+and type checking. At runtime in QuickJS, the module resolver intercepts the import and returns host-registered
+functions.
+
+```typescript
+// --- Push Hooks (fire-and-forget, script → host) ---
+
+/**
+ * Push a dataset to render as a chart in App Preview.
+ * The host infers chart type (line, bar, pie) from the data shape.
+ *
+ * @param data - Array of objects or a ChartConfig with explicit series/axis definitions.
+ */
+export declare function chart(data: Record<string, unknown>[] | ChartConfig): void;
+
+/**
+ * Push a dataset to render as a table in App Preview.
+ * Column headers are derived from object keys.
+ *
+ * @param data - Array of objects representing table rows.
+ */
+export declare function table(data: Record<string, unknown>[]): void;
+
+/**
+ * Log a message to the execution console panel.
+ * Supports structured data (objects are serialized to JSON).
+ */
+export declare function log(...args: unknown[]): void;
+
+// --- Bidirectional Hooks (async request-response, script ↔ host) ---
+
+/**
+ * Send a prompt to a configured AI/LLM endpoint and await the response.
+ * The VM suspends while the host resolves the request via TanStack Query.
+ *
+ * @param prompt - The natural-language prompt to send.
+ * @param options - Optional configuration (model, temperature, maxTokens).
+ * @returns Parsed LLM response.
+ */
+export declare function ai(prompt: string, options?: AiRequestOptions): Promise<AiResponse>;
+
+/**
+ * Make an HTTP request through the host environment.
+ * The VM suspends while the host resolves the request.
+ * Restricted to configured allowlisted domains for security.
+ *
+ * @param url - The URL to fetch.
+ * @param options - Standard request options (method, headers, body).
+ * @returns Parsed response with status, headers, and body.
+ */
+export declare function fetch(url: string, options?: FetchRequestOptions): Promise<FetchResponse>;
+```
+
+### Hook Supporting Types
+
+```typescript
+interface ChartConfig {
+    type: 'line' | 'bar' | 'pie';
+    title?: string;
+    xAxis?: string;
+    yAxis?: string;
+    series: ChartSeries[];
+}
+
+interface ChartSeries {
+    name: string;
+    dataKey: string;
+    color?: string;
+}
+
+interface AiRequestOptions {
+    model?: string;
+    temperature?: number;
+    maxTokens?: number;
+    responseFormat?: 'text' | 'json';
+}
+
+interface AiResponse {
+    text: string;
+    parsed?: unknown;
+    model: string;
+    usage: {promptTokens: number; completionTokens: number};
+}
+
+interface FetchRequestOptions {
+    method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+    headers?: Record<string, string>;
+    body?: string | Record<string, unknown>;
+}
+
+interface FetchResponse {
+    status: number;
+    headers: Record<string, string>;
+    body: unknown;
+    text: string;
+}
+```
+
+### Hook Resolution at Runtime
+
+When the transpiled JavaScript is loaded into QuickJS, hook resolution follows this sequence:
+
+1. **HookRewriter** (build-time) — Rewrites `import { chart } from '@openmodeler/hooks'` into a
+   QuickJS-compatible `import` referencing the virtual module ID `openmodeler:hooks`.
+
+2. **Module Resolver** (runtime) — The QuickJS module resolver intercepts `openmodeler:hooks` and returns a module
+   object whose exports are host-registered functions.
+
+3. **Host Bridge** (runtime) — Each hook function is a thin wrapper that:
+    - For **push hooks**: serializes the argument, passes it to a host callback, and returns immediately.
+    - For **bidirectional hooks**: serializes the argument, passes it to a host callback that returns a QuickJS
+      Promise. The VM suspends until the host resolves or rejects the Promise.
+
+4. **Host Callback** (runtime) — On the SPA side:
+    - `chart()` / `table()` → update React state → triggers re-render of App Preview.
+    - `log()` → appends to the execution console buffer.
+    - `ai()` → calls `queryClient.fetchQuery()` → HTTP to LLM → resolves the QuickJS Promise.
+    - `fetch()` → calls `queryClient.fetchQuery()` → HTTP to API → resolves the QuickJS Promise.
+
+```mermaid
+sequenceDiagram
+    participant Script as User Script (QuickJS)
+    participant Resolver as Module Resolver
+    participant Bridge as Host Bridge
+    participant React as React State
+    participant TQ as TanStack Query
+    participant LLM as LLM Endpoint
+    Note over Script, Resolver: Module Loading
+    Script ->> Resolver: import { chart, ai } from 'openmodeler:hooks'
+    Resolver -->> Script: { chart: hostFn, ai: hostFn }
+    Note over Script, React: Push Hook — chart()
+    Script ->> Bridge: chart(data)
+    Bridge ->> React: setState(chartData)
+    React -->> React: Re-render App Preview
+    Note over Script, LLM: Bidirectional Hook — ai()
+    Script ->> Bridge: await ai(prompt)
+    Bridge ->> Bridge: VM suspends
+    Bridge ->> TQ: fetchQuery({ queryFn: llmCall })
+    TQ ->> LLM: POST /api/chat
+    LLM -->> TQ: JSON response
+    TQ -->> Bridge: resolved data
+    Bridge ->> Script: Promise resolved — VM resumes
+```
+
+### Hook Security Constraints
+
+- **No raw `globalThis` access** — hooks are the only way scripts interact with the host.
+- **Domain allowlist** — `fetch()` is restricted to domains configured in project settings.
+- **Timeout** — bidirectional hooks have a configurable timeout (default: 30s). If the host does not resolve within
+  the timeout, the Promise is rejected and the script receives an error.
+- **Payload size limit** — push hooks enforce a maximum serialized payload size to prevent memory exhaustion in the
+  host.
+
+# Architect Comments
+
+1. Rethink `initializer` - I have a doubt we will need it.

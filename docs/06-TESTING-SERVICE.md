@@ -162,43 +162,43 @@ sequenceDiagram
 
 ```typescript
 interface TestSuite {
-    id: string;                        // UUID v4
-    name: string;                      // e.g. "Loan Calculator Tests"
-    projectId: string;                 // Parent project
-    targetFunction: string;            // Function name to test (e.g. "calculateLoan")
+    id: string; // UUID v4
+    name: string; // e.g. "Loan Calculator Tests"
+    projectId: string; // Parent project
+    targetFunction: string; // Function name to test (e.g. "calculateLoan")
     cases: TestCase[];
 }
 
 interface TestCase {
     id: string;
-    name: string;                      // e.g. "Standard 30-year mortgage"
+    name: string; // e.g. "Standard 30-year mortgage"
     description?: string;
-    inputs: Record<string, unknown>;   // Function parameters
-    expectedOutput: unknown;           // Expected return value
-    assertions: TestAssertion[];       // How to compare actual vs expected
+    inputs: Record<string, unknown>; // Function parameters
+    expectedOutput: unknown; // Expected return value
+    assertions: TestAssertion[]; // How to compare actual vs expected
 }
 
 type AssertionType = 'deepEqual' | 'propertyEquals' | 'typeOf' | 'contains' | 'greaterThan' | 'lessThan';
 
 interface TestAssertion {
     type: AssertionType;
-    path?: string;                     // Optional JSONPath for nested property checks
-    expected: unknown;                 // Expected value for this assertion
+    path?: string; // Optional JSONPath for nested property checks
+    expected: unknown; // Expected value for this assertion
 }
 
 interface TestResult {
     testCaseId: string;
     status: 'passed' | 'failed' | 'error';
     actualOutput: unknown;
-    duration: number;                  // Execution time in ms
+    duration: number; // Execution time in ms
     errorMessage?: string;
     assertionResults: AssertionResult[];
 }
 
 interface AssertionResult {
-    index: number;                     // Assertion index in TestCase.assertions
+    index: number; // Assertion index in TestCase.assertions
     passed: boolean;
-    message?: string;                  // Human-readable failure reason
+    message?: string; // Human-readable failure reason
 }
 
 interface TestReport {
@@ -224,6 +224,7 @@ stored as a project asset with `kind: 'test'` in JSON format.
 ### TestRunner (`test-runner.ts`)
 
 Executes test cases through the Execution Engine (Service 5). For each test case, it:
+
 1. Creates a sandbox via the engine
 2. Executes the target function with the test case inputs
 3. Evaluates each assertion against the actual output

@@ -15,7 +15,7 @@ Project is in design phase.
 ### Current Design Documents
 
 | Document                                                           | Service                 | Status |
-|--------------------------------------------------------------------|-------------------------|--------|
+| ------------------------------------------------------------------ | ----------------------- | ------ |
 | [ARCHITECTURE.md](ARCHITECTURE.md)                                 | All — master overview   | Active |
 | [01-PROJECTS-SERVICE.md](01-PROJECTS-SERVICE.md)                   | Projects Management (1) | Active |
 | [02-PROJECT-SERVICE.md](02-PROJECT-SERVICE.md)                     | Project Management (2)  | Active |
@@ -141,8 +141,8 @@ stateless by design.
 
 ## Routing Strategy & SPA Architecture
 
-To support **Static Site Generation (SSG)** and seamless deployment to **AWS S3**, the EdgeRules Modeler uses a *
-*Hash-based Routing (`#`)** strategy. This ensures that dynamic routes work without complex server-side redirects or
+To support **Static Site Generation (SSG)** and seamless deployment to **AWS S3**, the EdgeRules Modeler uses a \*
+\*Hash-based Routing (`#`)\*\* strategy. This ensures that dynamic routes work without complex server-side redirects or
 CloudFront error handlers, as the browser always loads the root `index.html` and parses the hash for state.
 
 ### Next.js Configuration
@@ -167,7 +167,7 @@ the "Dynamic State" from the hash.
 #### Route Map
 
 | View                     | Path                              | Logic                                                        |
-|:-------------------------|:----------------------------------|:-------------------------------------------------------------|
+| :----------------------- | :-------------------------------- | :----------------------------------------------------------- |
 | **Landing**              | `/`                               | Workspace & Public Library.                                  |
 | **Flow Editor**          | `/#flow/:projectId/`              | Visual programming canvas using ReactFlow.                   |
 | **Flow Editor (Nested)** | `/#flow/:projectId/:key`          | ReactFlow for function nodes (nested).                       |
@@ -199,7 +199,7 @@ Given the following project content for `abc-project`:
 function calculateMonthlyPayment(principal: number, annualRate: number, months: number): number {
     const monthlyRate = annualRate / 100 / 12;
     if (monthlyRate === 0) return principal / months;
-    return principal * (monthlyRate * Math.pow(1 + monthlyRate, months)) / (Math.pow(1 + monthlyRate, months) - 1);
+    return (principal * (monthlyRate * Math.pow(1 + monthlyRate, months))) / (Math.pow(1 + monthlyRate, months) - 1);
 }
 ```
 
@@ -634,11 +634,11 @@ component is a pure function or stateless class, tested exclusively with Jest.
 
 **Three pipelines:**
 
-| Pipeline      | Components                                                     | Direction           |
-|---------------|----------------------------------------------------------------|---------------------|
-| Parsing       | SourceParser → JsDocExtractor, TypeResolver, CallGraphAnalyzer | Source → AST        |
+| Pipeline      | Components                                                     | Direction             |
+| ------------- | -------------------------------------------------------------- | --------------------- |
+| Parsing       | SourceParser → JsDocExtractor, TypeResolver, CallGraphAnalyzer | Source → AST          |
 | Mutation      | SourceMutator                                                  | Visual Edits → Source |
-| Transpilation | Transpiler, HookRewriter                                       | Source → QuickJS JS |
+| Transpilation | Transpiler, HookRewriter                                       | Source → QuickJS JS   |
 
 **Parser extensibility:** `parser-interface.ts` defines the abstract contract. The `typescript/` directory implements
 it with ts-morph. Future parsers (Python via Pyodide AST, JavaScript via lighter tools) implement the same interface.
@@ -737,7 +737,7 @@ Cross-cutting types used across multiple services:
 
 ```typescript
 // common.ts
-type Result<T> = { ok: true; data: T } | { ok: false; error: AppError };
+type Result<T> = {ok: true; data: T} | {ok: false; error: AppError};
 
 // errors.ts
 interface AppError {
@@ -751,14 +751,14 @@ interface AppError {
 
 Services may only depend **downward and sideways within the lib/ layer**, never upward into hooks or components:
 
-| Service        | May depend on                           |
-|----------------|-----------------------------------------|
-| Projects (1)   | Storage                                 |
-| Project (2)    | Storage, AST (3) for type extraction    |
-| AST (3)        | — (pure logic, no service dependencies) |
-| Flow (4)       | AST (3) for ProjectAST types            |
-| Engine (5)     | AST (3) for transpilation               |
-| Testing (6)    | Engine (5) for execution                |
+| Service      | May depend on                           |
+| ------------ | --------------------------------------- |
+| Projects (1) | Storage                                 |
+| Project (2)  | Storage, AST (3) for type extraction    |
+| AST (3)      | — (pure logic, no service dependencies) |
+| Flow (4)     | AST (3) for ProjectAST types            |
+| Engine (5)   | AST (3) for transpilation               |
+| Testing (6)  | Engine (5) for execution                |
 
 ## MVP Scope
 
@@ -770,7 +770,7 @@ that can be plugged in later without refactoring. Open Modeler will act purely a
 ### MVP (Build Now)
 
 | Service      | Scope                                                                |
-|--------------|----------------------------------------------------------------------|
+| ------------ | -------------------------------------------------------------------- |
 | Projects (1) | Full CRUD with IndexedDB. Asset-aware StoredProject type.            |
 | Project (2)  | Metadata CRUD. TypeScript source as primary asset. Basic asset list. |
 | AST (3)      | Full parsing pipeline (SourceParser + all sub-components).           |
@@ -780,18 +780,18 @@ that can be plugged in later without refactoring. Open Modeler will act purely a
 
 ### Post-MVP (Interfaces Ready, Implementation Deferred)
 
-| Service        | Scope                                                     |
-|----------------|-----------------------------------------------------------|
-| Project (2)    | CSV/JSON importers. Utility and service asset kinds.      |
-| AST (3)        | SourceMutator (Visual Edits → Source string). HookRewriter.    |
-| Flow (4)       | FlowGraphSync (mutations → SourceMutator). Layout engine.           |
-| Engine (5)     | Bidirectional hooks (ai, fetch). Security layer.          |
-| Testing (6)    | Test case CRUD. Simple assertion runner.                  |
+| Service     | Scope                                                       |
+| ----------- | ----------------------------------------------------------- |
+| Project (2) | CSV/JSON importers. Utility and service asset kinds.        |
+| AST (3)     | SourceMutator (Visual Edits → Source string). HookRewriter. |
+| Flow (4)    | FlowGraphSync (mutations → SourceMutator). Layout engine.   |
+| Engine (5)  | Bidirectional hooks (ai, fetch). Security layer.            |
+| Testing (6) | Test case CRUD. Simple assertion runner.                    |
 
 ### Future (Not Started)
 
 | Feature                  | Service        |
-|--------------------------|----------------|
+| ------------------------ | -------------- |
 | Git storage adapter      | Storage        |
 | Python parser (Pyodide)  | AST (3)        |
 | Pyodide execution engine | Engine (5)     |
@@ -800,114 +800,4 @@ that can be plugged in later without refactoring. Open Modeler will act purely a
 
 ## Architect Review — MVP Risks & Open Questions
 
-> ⚠️ **This section must be resolved before implementation begins.** Each item is either a contradiction between
-> documents, an under-specified area, or a dependency gap that would block or derail development.
-
-### 🔴 Critical — Must Resolve
-
-#### 1. Round-trip editing is Post-MVP, but it's the core value proposition
-
-```mermaid
-flowchart LR
-    A["Business Case #3:<br/>'Flow editor changes are<br/>serialized back to the script'"] -->|requires| B["SourceMutator"]
-    A -->|requires| C["FlowGraphSync"]
-    B -->|listed as| D["Post-MVP ❌"]
-    C -->|listed as| D
-```
-
-**Business Case #3** states: *"Flow editor changes are serialized back to the script and saved in IndexedDB."*
-This requires `SourceMutator` (mutating the source string) and `FlowGraphSync` (sending visual mutations to the mutator) — both listed as **Post-MVP**.
-Without them, the flow editor is **read-only** in MVP. This either contradicts the business case, or the MVP scope
-table needs updating.
-
-**Decision required:** Is a read-only flow editor acceptable for MVP? If yes, update Business Case #3 to reflect
-phased delivery. If no, move `SourceMutator` and `FlowGraphSync` into MVP scope.
-
----
-
-#### 2. Single-file parser vs. multi-asset project model
-
-The AST parser signature was updated to `parseProject(assets: ProjectAsset[]): ProjectAST` to handle multi-file contexts. However, there is a strict **MVP Limitation**: it currently only transpiles and parses the **first** asset with `kind: 'source'` (or 'typescript') and ignores the rest. 
-
-**Unresolved questions:**
-
-- When full multi-file support is implemented, how are cross-file type references resolved?
-- How does `types.ts` (a separate asset) integrate with the main source's AST in the MVP? The types extractor (Service 2) "extracts interfaces from source via AST service" — but does it pass only the `types.ts` asset or the whole project?
-
-**Decision required:** Define the relationship between `ProjectAsset[]` and `ProjectAST`. Suggested approach: designate
-one `source` asset as the "main" entry point that gets parsed. Types from `types.ts` are injected into the parser
-context. Other assets are imported data, not parsed into the AST.
-
----
-
-#### 3. `TestAssertion` type is referenced but never defined
-
-`Service 6` `TestCase` interface includes `assertions: TestAssertion[]`, but `TestAssertion` is never defined in any
-document. What assertion types are supported? Deep equality? Contains? Regex match? Schema validation?
-
-**Decision required:** Define `TestAssertion` type before implementing Service 6, or simplify to
-`expectedOutput: unknown` with deep equality only for MVP.
-
----
-
-### 🟡 Important — Should Clarify
-
-#### 4. Save path not specified
-
-The sequence diagram shows how a script is **loaded** (IDB → parse → render) but does not show the **save** path.
-When a user edits code in CodeMirror:
-
-- Which service owns the "save" operation?
-- Does the source get re-parsed on every save, or only on explicit action?
-- Is there an auto-save or debounced save?
-
-**Recommendation:** Add a "Save & Re-parse" sequence diagram showing the write path.
-
----
-
-#### 5. QuickJS WASM loading strategy
-
-The architecture mandates SSG deployment on S3, but QuickJS requires a WASM binary at runtime. No document specifies:
-
-- Where the WASM binary lives (presumably `public/pkg-quickjs/`)
-- How it's loaded (dynamic import? `fetch`?)
-- What happens when loading fails (offline, corrupted file)
-
-**Recommendation:** Add a brief WASM loading section to the Engine service description, or create
-`ENGINE_ARCH.md` when implementation begins.
-
----
-
-#### 6. Hook types ownership ambiguity
-
-The `@openmodeler/hooks` virtual module types (`ChartConfig`, `AiRequestOptions`, etc.) are specified in
-[03-AST-PARSING.md](03-AST-PARSING.md) as part of the parser's hook system. But at runtime, these types also appear in
-`lib/engine/hooks-types.ts`. Both the parser (compile-time) and the engine (runtime) need these types.
-
-**Recommendation:** Define hook types once in `lib/engine/hooks-types.ts` (the runtime is authoritative). The parser
-imports them for type-checking but doesn't re-define them. Update 03-AST-PARSING.md to reference the engine's types.
-
----
-
-### 🟢 Minor — Track for Later
-
-#### 7. Node JSDoc annotations: required vs. optional
-
-The 03-AST-PARSING.md defines several `@nodeType`, `@displayName`, `@visible` annotations but doesn't specify which are
-**required** for a declaration to appear in the flow graph. What happens when:
-
-- A function has no `@nodeType` annotation? (Hidden? Default to `function`?)
-- A function has `@nodeType chart` but no `chart()` hook call? (Render empty chart node?)
-
-**Recommendation:** Define default behavior when annotations are missing. Suggested: functions without `@nodeType`
-default to `function` node type; `@visible false` hides them.
-
----
-
-#### 8. `ProjectAST.metadata` is sparse
-
-The `ProjectAST` interface has a `metadata` field, but its shape is not defined in 03-AST-PARSING.md beyond the
-top-level
-structure. What goes in metadata? Parse timestamps? Source hash? Version?
-
-**Recommendation:** Define a `ParseMetadata` interface or defer metadata to Post-MVP.
+> ✅ **All identified MVP architectural risks have been successfully resolved during the design phase.** The structural documents now reflect strict, "first principles" alignments for lazy loading, multi-file compilation, scope scoping, execution environment injection, and visual mutation handling.

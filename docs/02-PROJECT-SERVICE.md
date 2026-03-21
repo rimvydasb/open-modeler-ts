@@ -199,12 +199,12 @@ sequenceDiagram
 type AssetKind = 'source' | 'types' | 'json' | 'csv' | 'utility' | 'service';
 
 interface ProjectAsset {
-    id: string;                        // UUID v4
-    filename: string;                  // e.g. "main.ts", "config.json"
-    kind: AssetKind;                   // Discriminator for UI rendering and import handling
-    content: string;                   // File contents (text-based)
-    createdAt: string;                 // ISO 8601
-    updatedAt: string;                 // ISO 8601
+    id: string; // UUID v4
+    filename: string; // e.g. "main.ts", "config.json"
+    kind: AssetKind; // Discriminator for UI rendering and import handling
+    content: string; // File contents (text-based)
+    createdAt: string; // ISO 8601
+    updatedAt: string; // ISO 8601
 }
 
 interface ProjectMeta {
@@ -222,11 +222,11 @@ interface UpdateMetadataInput {
 }
 
 interface ManagedType {
-    id: string;                        // Derived from interface name
-    name: string;                      // Interface name (e.g. "LoanInput")
-    properties: PropertyInfo[];        // From AST parsing
-    sourceAssetId: string;             // Which asset this type was extracted from
-    isEdited: boolean;                 // True if user has modified via Types Editor
+    id: string; // Derived from interface name
+    name: string; // Interface name (e.g. "LoanInput")
+    properties: PropertyInfo[]; // From AST parsing
+    sourceAssetId: string; // Which asset this type was extracted from
+    isEdited: boolean; // True if user has modified via Types Editor
 }
 
 interface ImporterInterface {
@@ -282,6 +282,7 @@ within the project.
 ### Importers (`assets/importers/`)
 
 Each importer implements `ImporterInterface`:
+
 - **JsonImporter** — validates JSON syntax, creates `kind: 'json'` asset
 - **CsvImporter** — parses CSV headers, creates `kind: 'csv'` asset
 - **TypeScriptImporter** — reads TypeScript source, creates `kind: 'source'` or `kind: 'utility'` asset

@@ -46,7 +46,7 @@ function calculateMonthlyPayment(principal: number, annualRate: number, months: 
     const monthlyRate = annualRate / 100 / 12;
     if (monthlyRate === 0) return principal / months;
 
-    return principal * (monthlyRate * Math.pow(1 + monthlyRate, months)) / (Math.pow(1 + monthlyRate, months) - 1);
+    return (principal * (monthlyRate * Math.pow(1 + monthlyRate, months))) / (Math.pow(1 + monthlyRate, months) - 1);
 }
 
 /**
@@ -57,7 +57,13 @@ function calculateMonthlyPayment(principal: number, annualRate: number, months: 
  * @param termMonths
  * @param startDate
  */
-function generateLoanSchedule(loanAmount: number, monthlyPayment: number, annualInterestRate: number, termMonths: number, startDate: Date): PaymentLine[] {
+function generateLoanSchedule(
+    loanAmount: number,
+    monthlyPayment: number,
+    annualInterestRate: number,
+    termMonths: number,
+    startDate: Date,
+): PaymentLine[] {
     const monthlyRate = annualInterestRate / 100 / 12;
 
     let currentBalance = loanAmount;
@@ -116,5 +122,3 @@ export function main() {
     renderLoanBalanceChart(schedule);
     renderLoanScheduleTable(schedule);
 }
-
-
