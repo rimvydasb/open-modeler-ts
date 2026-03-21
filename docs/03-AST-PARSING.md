@@ -944,6 +944,11 @@ calls to unknowns). Assert only top-level function references are captured.
 
 Applies visual flow editor mutations directly to the underlying TypeScript source strings using `ts-morph`. Since `ProjectAST` no longer holds the function bodies or constant initializers (to prevent memory bloat and state sync issues), we must mutate the `ProjectAsset` directly rather than re-serializing the entire AST.
 
+**Key transformation logic:**
+- **Structural edits:** Adding/removing functions or updating parameters uses the standard `ts-morph` AST manipulation API.
+- **Configuration edits:** When receiving an `update-node-config` mutation, the mutator locates the declaration's JSDoc block and performs a surgical string replacement of the `@nodeType` tag payload (e.g., rewriting `@nodeType chart { ...old... }` to `@nodeType chart { ...new... }`).
+- **Data Flow edits:** Connectors (edges) are updated by rewriting the `CallExpression` statements inside the parent flow function's body.
+
 ```typescript
 /**
  * Applies a list of flow editor mutations to the project's source code.

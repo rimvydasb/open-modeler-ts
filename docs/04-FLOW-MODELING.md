@@ -188,6 +188,7 @@ type FlowMutation =
     | {type: 'add-edge'; sourceId: string; targetId: string}
     | {type: 'remove-edge'; edgeId: string}
     | {type: 'update-parameter'; functionId: string; paramIndex: number; update: Partial<ParameterInfo>}
+    | {type: 'update-node-config'; nodeId: string; config: ChartConfig | TableConfig}
     | {type: 'add-node'; nodeType: NodeType; name: string; position: {x: number; y: number}}
     | {type: 'remove-node'; nodeId: string}
     | {type: 'rename-node'; nodeId: string; newName: string};
