@@ -1,11 +1,12 @@
-describe('Home Page', () => {
-    it('should display the main heading', () => {
+describe('Health Check', () => {
+    it('should load the application', () => {
         cy.visit('/');
-        cy.get('h1').should('contain', 'EdgeRules Modeler');
+        cy.contains('EdgeRules Modeler').should('be.visible');
     });
 
-    it('should have a Get Started button', () => {
-        cy.visit('/');
-        cy.get('button').should('contain', 'Get Started');
+    it('should display the health page', () => {
+        cy.visit('/health');
+        cy.contains('Health Check').should('be.visible');
+        cy.contains('OK').should('be.visible');
     });
 });

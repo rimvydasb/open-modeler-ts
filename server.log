@@ -1,0 +1,29 @@
+
+> edgerules-modeler@1.0.0 dev
+> next dev -p 3000
+
+▲ Next.js 16.1.6 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://127.0.2.2:3000
+
+✓ Starting...
+✓ Ready in 434ms
+ HEAD / 200 in 316ms (compile: 281ms, render: 36ms)
+ GET / 200 in 348ms (compile: 187ms, render: 161ms)
+ GET / 200 in 47ms (compile: 7ms, render: 40ms)
+ GET / 200 in 17ms (compile: 1390µs, render: 16ms)
+ GET /health/ 200 in 45ms (compile: 22ms, render: 23ms)
+ GET / 200 in 18ms (compile: 1172µs, render: 17ms)
+ GET / 200 in 15ms (compile: 929µs, render: 14ms)
+ GET / 200 in 16ms (compile: 1156µs, render: 15ms)
+ GET / 200 in 16ms (compile: 1764µs, render: 14ms)
+ GET / 200 in 15ms (compile: 1352µs, render: 14ms)
+ GET / 200 in 19ms (compile: 1942µs, render: 17ms)
+ GET / 200 in 15ms (compile: 992µs, render: 14ms)
+ GET / 200 in 15ms (compile: 1351µs, render: 14ms)
+ GET / 200 in 16ms (compile: 1017µs, render: 15ms)
+ GET / 200 in 14ms (compile: 1045µs, render: 13ms)
+ GET / 200 in 14ms (compile: 1047µs, render: 13ms)
+ GET / 200 in 14ms (compile: 917µs, render: 13ms)
+ GET / 200 in 15ms (compile: 1013µs, render: 14ms)
+[?25h

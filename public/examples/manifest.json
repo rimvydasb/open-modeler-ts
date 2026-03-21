@@ -1,0 +1,8 @@
+[
+    {
+        "id": "example-loan-return",
+        "name": "Loan Approval Demo",
+        "description": "Standard DMN-style loan approval logic with payment schedule, chart visualization, and table output.",
+        "sourceFile": "/examples/example-loan-return.ts"
+    }
+]

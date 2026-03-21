@@ -1,3 +1,5 @@
+'use client';
+
 import {Container, Typography, Box, Chip} from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 

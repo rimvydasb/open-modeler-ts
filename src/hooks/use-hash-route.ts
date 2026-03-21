@@ -83,10 +83,9 @@ export function useHashRoute(): RouteState {
 
 export function navigateTo(path: string): void {
     if (path === '/' || path === '') {
-        window.location.hash = '';
-        if (window.location.hash === '' || window.location.hash === '#') {
-            window.dispatchEvent(new HashChangeEvent('hashchange'));
-        }
+        // Remove hash entirely from URL
+        history.pushState(null, '', window.location.pathname + window.location.search);
+        window.dispatchEvent(new HashChangeEvent('hashchange'));
     } else {
         window.location.hash = path;
     }

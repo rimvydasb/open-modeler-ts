@@ -64,7 +64,7 @@ export default function Home() {
     if (route.view === 'landing') {
         return (
             <LandingLayout>
-                <LandingView />
+                {(section) => <LandingView activeSection={section} />}
             </LandingLayout>
         );
     }
@@ -84,7 +84,7 @@ export default function Home() {
 
     return (
         <LandingLayout>
-            <LandingView />
+            {(section) => <LandingView activeSection={section} />}
         </LandingLayout>
     );
 }

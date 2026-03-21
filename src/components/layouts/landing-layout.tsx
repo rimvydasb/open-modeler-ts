@@ -21,7 +21,7 @@ const SIDEBAR_WIDTH = 240;
 type SidebarSection = 'public-library' | 'company-workspace' | 'my-workspace';
 
 interface LandingLayoutProps {
-    children: ReactNode;
+    children: ReactNode | ((section: SidebarSection, onSectionChange: (section: SidebarSection) => void) => ReactNode);
     activeSection?: SidebarSection;
     onSectionChange?: (section: SidebarSection) => void;
 }
@@ -63,6 +63,7 @@ export default function LandingLayout({children, activeSection, onSectionChange}
                     <ListItemButton
                         selected={section === 'public-library'}
                         onClick={() => handleSectionChange('public-library')}
+                        data-testid="sidebar-public-library"
                     >
                         <ListItemIcon>
                             <PublicIcon />
@@ -72,7 +73,7 @@ export default function LandingLayout({children, activeSection, onSectionChange}
 
                     <Tooltip title="Coming Soon" placement="right">
                         <span>
-                            <ListItemButton disabled>
+                            <ListItemButton disabled data-testid="sidebar-company-workspace">
                                 <ListItemIcon>
                                     <HomeWorkIcon />
                                 </ListItemIcon>
@@ -84,6 +85,7 @@ export default function LandingLayout({children, activeSection, onSectionChange}
                     <ListItemButton
                         selected={section === 'my-workspace'}
                         onClick={() => handleSectionChange('my-workspace')}
+                        data-testid="sidebar-my-workspace"
                     >
                         <ListItemIcon>
                             <PortraitIcon />
@@ -103,7 +105,7 @@ export default function LandingLayout({children, activeSection, onSectionChange}
                     mt: '64px',
                 }}
             >
-                {children}
+                {typeof children === 'function' ? children(section, handleSectionChange) : children}
             </Box>
         </Box>
     );

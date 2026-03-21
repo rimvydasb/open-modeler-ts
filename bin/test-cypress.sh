@@ -19,7 +19,7 @@ if [ -d "$SCREENSHOTS_DIR" ]; then
     rm -rf "$SCREENSHOTS_DIR"/*
 fi
 
-# 3. Kill any existing process on port 3005
+# 3. Kill any existing process
 if lsof -Pi :$PORT -sTCP:LISTEN -t >/dev/null ; then
     echo "Port $PORT is occupied. Killing existing process..."
     lsof -ti:$PORT | xargs kill -9
