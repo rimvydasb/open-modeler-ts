@@ -31,9 +31,15 @@ classDiagram
         +string name
         +string? description
         +Record~string, string~ tags
-        +ProjectAsset[] assets
+        +ProjectAssetMeta[] assets
         +string createdAt
         +string updatedAt
+    }
+
+    class ProjectAssetMeta {
+        +string id
+        +string filename
+        +AssetKind kind
     }
 
     class ProjectListItem {
@@ -85,10 +91,10 @@ classDiagram
     ProjectsService ..> StoredProject : manages
     ProjectsService ..> ProjectListItem : returns
     ProjectsService ..> CreateProjectInput : accepts
-    StoredProject *-- "0..*" ProjectAsset : contains
+    StoredProject *-- "0..*" ProjectAssetMeta : contains
 ```
 
-> `ProjectAsset` is defined in [02-PROJECT-SERVICE.md](02-PROJECT-SERVICE.md).
+> `ProjectAsset` (content) and `ProjectAssetMeta` are defined in [02-PROJECT-SERVICE.md](02-PROJECT-SERVICE.md).
 
 ## Behavioral Diagram
 
@@ -114,7 +120,7 @@ sequenceDiagram
         Svc ->> Svc: generate UUID, set timestamps
         Svc ->> Svc: create default assets (main.ts, types.ts)
         Svc ->> Repo: save(storedProject)
-        Repo ->> IDB: put("projects", id, project)
+        Repo ->> IDB: put("projects_metadata", id, project)
         IDB -->> Repo: void
         Repo -->> Svc: void
         Svc -->> Hook: Result { ok: true, data: StoredProject }
@@ -125,7 +131,7 @@ sequenceDiagram
     UI ->> Hook: useProjects()
     Hook ->> Svc: listProjects()
     Svc ->> Repo: findAll()
-    Repo ->> IDB: getAll("projects")
+    Repo ->> IDB: getAll("projects_metadata")
     IDB -->> Repo: StoredProject[]
     Repo -->> Svc: StoredProject[]
     Svc ->> Svc: map to ProjectListItem[]
@@ -136,7 +142,7 @@ sequenceDiagram
     UI ->> Hook: deleteProject(id)
     Hook ->> Svc: deleteProject(id)
     Svc ->> Repo: remove(id)
-    Repo ->> IDB: delete("projects", id)
+    Repo ->> IDB: delete("projects_metadata", id)
     IDB -->> Repo: void
     Svc -->> Hook: Result { ok: true }
     Hook -->> UI: refresh project list
@@ -150,9 +156,15 @@ interface StoredProject {
     name: string;                      // User-defined, unique within workspace
     description?: string;
     tags: Record<string, string>;      // Arbitrary key-value metadata
-    assets: ProjectAsset[];            // All project files (source, types, data)
+    assets: ProjectAssetMeta[];        // List of assets (metadata only, no content)
     createdAt: string;                 // ISO 8601
     updatedAt: string;                 // ISO 8601
+}
+
+interface ProjectAssetMeta {
+    id: string;
+    filename: string;
+    kind: AssetKind;
 }
 
 interface ProjectListItem {

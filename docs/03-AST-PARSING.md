@@ -123,7 +123,6 @@ classDiagram
         +returnType: TypeReference
         +isAsync: boolean
         +isExported: boolean
-        +body: string
         +callExpressions: CallExpression[]
     }
 
@@ -135,7 +134,6 @@ classDiagram
     class ConstantDeclaration {
         +kind: "constant"
         +typeAnnotation: TypeReference | undefined
-        +initializer: string
         +properties: PropertyInfo[]
     }
 
@@ -377,8 +375,6 @@ interface FunctionDeclaration extends DeclarationBase {
     returnType: TypeReference;
     isAsync: boolean;
     isExported: boolean;
-    /** Raw function body source text for round-trip editing. */
-    body: string;
     /** Function calls found in the body — used to derive flow edges. */
     callExpressions: CallExpression[];
 }
@@ -404,8 +400,6 @@ interface ConstantDeclaration extends DeclarationBase {
     kind: 'constant';
     /** Explicit type annotation, if present. */
     typeAnnotation?: TypeReference;
-    /** Raw initializer source text. */
-    initializer: string;
     /** Properties extracted from object literal initializers. */
     properties: PropertyInfo[];
 }
@@ -434,9 +428,11 @@ type Declaration =
     | TypeAliasDeclaration;
 ```
 
-### Project AST (Root)
+## Project AST (Root)
 
 The top-level AST node representing an entire parsed project script.
+
+> **Architectural Constraint:** The `ProjectAST` strictly defines the logical structure and signatures of the project but does **not** store the raw source code text (function bodies or constant initializers). When the UI (e.g., the Code Editor) or the Transpiler needs the actual source text, it loads the underlying `ProjectAsset` from IndexedDB and extracts the text using the declaration's `sourceRange`. This ensures the asset in IndexedDB remains the single source of truth without bloating the AST in memory.
 
 ```typescript
 interface ProjectAST {
@@ -515,7 +511,6 @@ const projectAST: ProjectAST = {
             documentation: undefined,
             sourceRange: {startLine: 26, endLine: 31, startColumn: 1, endColumn: 3},
             typeAnnotation: undefined,
-            initializer: '{ loanAmount: 100000, annualInterestRate: 5.0, termMonths: 360, startDate: new Date(\'2026-04-01\') }',
             properties: [
                 {
                     name: 'loanAmount',
@@ -572,7 +567,6 @@ const projectAST: ProjectAST = {
             returnType: {kind: 'primitive', name: 'number', typeArguments: [], isArray: false, isNullable: false},
             isAsync: false,
             isExported: false,
-            body: '{ const monthlyRate = annualRate / 100 / 12; ... }',
             callExpressions: [],
         },
         {
@@ -614,7 +608,6 @@ const projectAST: ProjectAST = {
             returnType: {kind: 'reference', name: 'PaymentLine', typeArguments: [], isArray: true, isNullable: false},
             isAsync: false,
             isExported: false,
-            body: '{ ... }',
             callExpressions: [],
         },
         {
@@ -636,7 +629,6 @@ const projectAST: ProjectAST = {
             returnType: {kind: 'void', name: 'void', typeArguments: [], isArray: false, isNullable: false},
             isAsync: false,
             isExported: false,
-            body: '{ // chart_hook(schedule); }',
             callExpressions: [],
         },
         {
@@ -658,7 +650,6 @@ const projectAST: ProjectAST = {
             returnType: {kind: 'void', name: 'void', typeArguments: [], isArray: false, isNullable: false},
             isAsync: false,
             isExported: false,
-            body: '{ // table_hook(schedule); }',
             callExpressions: [],
         },
         {
@@ -674,7 +665,6 @@ const projectAST: ProjectAST = {
             returnType: {kind: 'void', name: 'void', typeArguments: [], isArray: false, isNullable: false},
             isAsync: false,
             isExported: true,
-            body: '{ ... }',
             callExpressions: [
                 {targetName: 'calculateMonthlyPayment', arguments: ['loanAmount', 'annualInterestRate', 'termMonths']},
                 {

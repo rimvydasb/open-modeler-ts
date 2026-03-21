@@ -77,7 +77,8 @@ classDiagram
     }
 
     class AssetsService {
-        +listAssets(project) ProjectAsset[]
+        +listAssetMetadata(project) ProjectAssetMeta[]
+        +getAssetContent(assetId) ProjectAsset
         +addAsset(project, asset) StoredProject
         +removeAsset(project, assetId) StoredProject
         +updateAssetContent(project, assetId, content) StoredProject
@@ -128,7 +129,7 @@ classDiagram
 
     TypesService --> TypesExtractor : delegates parsing
     TypesExtractor ..> ManagedType : produces
-    TypesExtractor --> "Service 3" : calls parseSource()
+    TypesExtractor --> "Service 3" : calls parseProject()
 
     AssetsService --> AssetValidator : validates
     AssetsService --> ImporterInterface : delegates import
@@ -156,10 +157,11 @@ sequenceDiagram
     UI ->> Hook: updateSource(newContent)
     Hook ->> Svc: updateAssetContent(projectId, assetId, content)
     Svc ->> Assets: updateAssetContent(project, assetId, content)
-    Assets ->> Assets: find asset, update content + updatedAt
+    Assets ->> IDB: put("project_assets", assetId, asset)
+    Assets ->> Assets: find asset meta, update updatedAt
     Assets -->> Svc: updated StoredProject
     Svc ->> S1: saveProject(updatedProject)
-    S1 ->> IDB: put("projects", id, project)
+    S1 ->> IDB: put("projects_metadata", id, project)
     IDB -->> S1: void
     S1 -->> Svc: Result { ok: true }
     Svc -->> Hook: Result { ok: true }
@@ -181,10 +183,11 @@ sequenceDiagram
         Val -->> Assets: AssetKind
         Assets ->> Imp: import(file)
         Imp -->> Assets: ProjectAsset
-        Assets ->> Assets: append asset to project
+        Assets ->> IDB: put("project_assets", asset.id, asset)
+        Assets ->> Assets: append asset meta to project
         Assets -->> Svc: updated StoredProject
         Svc ->> S1: saveProject(updatedProject)
-        S1 ->> IDB: put("projects", id, project)
+        S1 ->> IDB: put("projects_metadata", id, project)
         Svc -->> Hook: Result { ok: true }
         Hook -->> UI: refresh asset list
     end
@@ -249,7 +252,7 @@ Reads and updates project metadata fields. Automatically manages `updatedAt` tim
 
 ### TypesExtractor (`types-management/types-extractor.ts`)
 
-Delegates to Service 3's `parseSource()` to extract `InterfaceDeclaration` entries from a source asset, then maps
+Delegates to Service 3's `parseProject()` to extract `InterfaceDeclaration` entries from a source asset, then maps
 them to `ManagedType[]` for the Types Editor UI. This is the bridge between the AST world and the types
 management world.
 
