@@ -22,50 +22,103 @@ and the hooks type system.
 > **Flow graph derivation, node components, and visual editing are defined in [FLOW_ARCH.md](FLOW_ARCH.md).**
 > **Persistence model (StoredProject) is defined in [ARCHITECTURE.md](ARCHITECTURE.md) under Service 1.**
 
-## Runtime Architecture
+## Architectural Views
+
+To correctly model the system, we strictly separate the compilation phase from the sandboxed execution runtime. Mixing these concepts leads to blurred boundaries. The architecture is represented through two distinct models:
+
+### 1. Compilation & Transformation Pipeline (Data Flow)
+
+This pipeline focuses strictly on how data mutates when the user types code or edits the visual graph, aligning with the **Services Architecture**. The AST Parsing (Service 3) translates type signatures into port configurations for Flow Modeling (Service 4), while simultaneously providing executable JS and input metadata to the Execution Engine (Service 5) host environment.
 
 ```mermaid
 graph TB
-    subgraph UserInterface["User Interface"]
-        CE["CodeMirror<br/>Code Editor"]
-        FE["ReactFlow<br/>Flow Editor"]
-        AP["MUI X Charts<br/>App Preview"]
+    subgraph PersistenceLayer["Storage Layer"]
+        IDB["IndexedDB<br/>(Service 1 & 2)"]
     end
 
-    subgraph AnalysisLayer["Analysis Layer"]
-        TSM["ts-morph<br/>AST Parser"]
+    subgraph UserInterface["User Interface Layer (Cypress)"]
+        CE["Code Editor<br/>(Service 2)"]
+        FE["Flow Editor<br/>(Service 4)"]
+    end
+
+    subgraph AnalysisLayer["AST Parsing Layer (Service 3)"]
+        TSM["ts-morph<br/>Source Parser"]
         AST["OpenModel<br/>Project AST"]
+        TRANS["Transpiler"]
     end
 
-    subgraph ExecutionLayer["Execution Layer"]
-        QJS["QuickJS<br/>Sandbox VM"]
-        HOOKS["Host Hooks<br/>ai · chart · table"]
+    subgraph FlowModelingLayer["Flow Modeling Layer (Service 4)"]
+        FGB["FlowGraph Builder"]
     end
 
-    subgraph PersistenceLayer["Persistence Layer"]
-        IDB["IndexedDB<br/>Project Storage"]
+    subgraph ExecutionLayer["Execution Engine Layer (Service 5)"]
+        VM_PREP["Host Context Prep"]
+    end
+
+    IDB -- " save / load " --> CE
+    CE -- " TypeScript Source " --> TSM
+    TSM -- " parses into " --> AST
+    
+    AST -- " maps signatures to ports " --> FGB
+    FGB -- " FlowGraph (Nodes & Edges) " --> FE
+    FE -- " mutations (round-trip) " --> AST
+    
+    AST -- " transpiles " --> TRANS
+    TRANS -- " Executable JS " --> VM_PREP
+    AST -- " provides signatures " --> VM_PREP
+
+    style PersistenceLayer fill: #f3e5f5, stroke: #6a1b9a
+    style UserInterface fill: #e3f2fd, stroke: #1565c0
+    style AnalysisLayer fill: #fff3e0, stroke: #e65100
+    style FlowModelingLayer fill: #e0f7fa, stroke: #00838f
+    style ExecutionLayer fill: #e8f5e9, stroke: #2e7d32
+```
+
+### 2. Runtime Execution Architecture (Host vs. Guest)
+
+This view focuses entirely on the Host vs. Guest execution boundary, memory isolation, and host-guest communication. The Guest (QuickJS) is completely unaware of TypeScript or the AST; it only executes transpiled JavaScript and communicates through the strict FFI (Foreign Function Interface) boundary.
+
+```mermaid
+graph TB
+    subgraph HostEnvironment["Host Environment (SPA) - Execution Engine (Service 5)"]
+        ENG["Host Context & Input Prep"]
+        HOOKS["Host Bridge<br/>(Hooks Implementation)"]
+        AP["App Preview<br/>(React State)"]
+        TSQ["TanStack Query<br/>(Request Manager)"]
+    end
+
+    subgraph SecurityBoundary["FFI Boundary"]
+        FFI["Secure Sandbox Isolation"]
+    end
+
+    subgraph GuestEnvironment["Guest Environment - QuickJS"]
+        QJS["QuickJS VM<br/>(V8 / WASM)"]
+        EXEC["Executing Logic"]
     end
 
     subgraph ExternalServices["External Services"]
-        TSQ["TanStack Query<br/>Request Manager"]
-        LLM["Local LLM<br/>Endpoint"]
+        LLM["Local LLM Endpoint"]
+        API["External HTTP APIs"]
     end
 
-    CE -- " TypeScript source " --> TSM
-    TSM -- " parses into " --> AST
-    AST -- " renders " --> FE
-    FE -- " serializes back to " --> CE
-    AST -- " provides signatures " --> QJS
-    CE -- " save / load " --> IDB
-    QJS -- " calls " --> HOOKS
-    HOOKS -- " ai() " --> TSQ
+    ENG -- " 1. Inject Executable JS " --> QJS
+    ENG -- " 2. Pass Inputs (mapped via signatures) " --> QJS
+    
+    QJS --- FFI
+    FFI --- HOOKS
+
+    QJS -- " await ai(), fetch() " --> HOOKS
+    QJS -- " chart(), table(), log() " --> HOOKS
+
+    HOOKS -- " push data " --> AP
+    HOOKS -- " async request " --> TSQ
+    
     TSQ -- " HTTP " --> LLM
-    HOOKS -- " chart() / table() " --> AP
-    QJS -- " execution result " --> AP
-    style UserInterface fill: #e3f2fd, stroke: #1565c0
-    style AnalysisLayer fill: #fff3e0, stroke: #e65100
-    style ExecutionLayer fill: #e8f5e9, stroke: #2e7d32
-    style PersistenceLayer fill: #f3e5f5, stroke: #6a1b9a
+    TSQ -- " HTTP " --> API
+
+    style HostEnvironment fill: #e3f2fd, stroke: #1565c0
+    style GuestEnvironment fill: #e8f5e9, stroke: #2e7d32
+    style SecurityBoundary fill: #cfd8dc, stroke: #424242, color: #000
     style ExternalServices fill: #fce4ec, stroke: #c62828
 ```
 

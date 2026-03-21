@@ -46,19 +46,20 @@ Project is in design phase.
 sequenceDiagram
     participant User as 👤 User (GUI)
     participant IDB as 💾 IndexedDB
-    participant TSM as 🏗️ ts-morph
+    participant AST as 🏗️ AST Parser (ts-morph)
     participant QJS as 🛡️ QuickJS VM
     participant SPA as 🌐 SPA (Host)
     participant TSQ as 🔄 TanStack Query
     participant LLM as 🤖 Local LLM
-    Note over User, TSM: Phase 1 — Analysis
-    User ->> IDB: Fetch business_logic.js
-    IDB -->> User: JS Code
-    User ->> TSM: Read signatures
-    TSM -->> User: Metadata
-    Note over User, LLM: Phase 2 — Execution
-    User ->> QJS: Init sandbox
-    User ->> QJS: Register ai()
+    Note over User, AST: Phase 1 — Compilation & Transformation
+    User ->> IDB: Fetch business_logic.ts
+    IDB -->> User: TS Source Code
+    User ->> AST: Parse & Transpile
+    AST -->> User: AST Signatures + Executable JS
+    Note over User, LLM: Phase 2 — Sandboxed Execution
+    User ->> QJS: Init sandbox & Inject Executable JS
+    User ->> QJS: Register host hooks (e.g. ai)
+    User ->> QJS: Pass inputs (mapped via signatures)
     QJS ->> QJS: Run script
     QJS ->> SPA: ai() call — VM suspends
     SPA ->> TSQ: fetchQuery()
@@ -70,35 +71,34 @@ sequenceDiagram
     User ->> QJS: Dispose sandbox
 ```
 
-## Phase 1 — Analysis
+## Phase 1 — Compilation & Transformation
 
-1. **Fetch business_logic.js** — GUI loads the script from IndexedDB.
-2. **JS Code** — Raw JS returned to the caller.
-3. **Read signatures** — ts-morph parses the AST to extract function names, parameter names/types, and return
-   shapes. If the file is TypeScript, call `sourceFile.getEmitOutput()` or `project.emit()` here to get transpiled JS
-   before passing to the VM.
-4. **Metadata** — Signature metadata returned to the host so it knows what inputs to prepare before execution
-   starts.
+1. **Fetch business_logic.ts** — GUI loads the TypeScript source code from IndexedDB.
+2. **TS Source Code** — Raw source is returned to the caller.
+3. **Parse & Transpile** — The AST parser (via `ts-morph`) extracts function names, parameter types, and return
+   shapes. Concurrently, it transpiles the TypeScript source into executable JavaScript.
+4. **AST Signatures + Executable JS** — Both the extracted metadata (signatures) and the executable JS are returned to the host. The host uses signatures to construct the visual ReactFlow graph and to map user inputs properly.
 
-## Phase 2 — Execution
+## Phase 2 — Sandboxed Execution
 
-5. **Init sandbox** — A fresh QuickJS runtime instance is created: isolated heap, own global scope, no access to
-   browser DOM or fetch.
-6. **Register ai()** — The host injects `ai(prompt)` into the sandbox global scope before the script runs. Business
+5. **Init sandbox & Inject Executable JS** — A fresh QuickJS runtime instance is created: isolated heap, own global scope, no access to
+   browser DOM or fetch. The transpiled JavaScript is loaded into the VM.
+6. **Register host hooks** — The host injects bridge functions like `ai(prompt)` into the sandbox global scope before the script runs. Business
    logic can call it like any normal async function.
-7. **Run script** — QuickJS executes business_logic.js inside the sandbox.
-8. **ai() call — VM suspends** — When business logic hits `await ai("...")`, the VM yields control back to the SPA
+7. **Pass inputs** — The host uses the previously extracted AST signatures to correctly map UI state variables and inject them as parameters into the Guest execution context.
+8. **Run script** — QuickJS executes the logic inside the sandbox.
+9. **ai() call — VM suspends** — When business logic hits `await ai("...")`, the VM yields control back to the SPA
    host and waits for the Promise to resolve.
-9. **fetchQuery()** — Host calls `queryClient.fetchQuery()` imperatively to trigger the LLM HTTP call via TanStack
-   Query.
-10. **HTTP request** — TanStack Query sends the request to the LLM endpoint, with built-in deduplication, caching,
+10. **fetchQuery()** — Host calls `queryClient.fetchQuery()` imperatively to trigger the LLM HTTP call via TanStack
+    Query.
+11. **HTTP request** — TanStack Query sends the request to the LLM endpoint, with built-in deduplication, caching,
     and retry.
-11. **JSON response** — LLM returns structured JSON.
-12. **Resolved data** — TanStack Query hands the result back to the host.
-13. **Resume — resolve Promise** — Host resolves the `ai()` Promise with the LLM result; the VM resumes from where
+12. **JSON response** — LLM returns structured JSON.
+13. **Resolved data** — TanStack Query hands the result back to the host.
+14. **Resume — resolve Promise** — Host resolves the `ai()` Promise with the LLM result; the VM resumes from where
     it suspended.
-14. **Final result** — Business logic finishes and returns its output to the GUI.
-15. **Dispose sandbox** — QuickJS runtime is torn down, freeing heap memory and ensuring no state leaks into the
+15. **Final result** — Business logic finishes and returns its output to the GUI.
+16. **Dispose sandbox** — QuickJS runtime is torn down, freeing heap memory and ensuring no state leaks into the
     next execution.
 
 ## Notes
