@@ -627,10 +627,11 @@ This service is the "work surface" that the project layout views interact with.
 > **Architecture document:** [03-AST-PARSING.md](03-AST-PARSING.md)
 
 **Responsibility:** Pure data transformation service. Takes TypeScript source strings and produces `ProjectAST` data
-structures. Also handles the reverse path (AST → source serialization) and transpilation to QuickJS-ready JavaScript.
+structures. It extracts function signatures, type definitions, and visual node configurations from JSDoc. It also handles the reverse path (SourceMutator) and transpilation to QuickJS-ready JavaScript.
 
-**This service is strictly React-free and has no dependency on ReactFlow, the DOM, or any UI framework.** Every
-component is a pure function or stateless class, tested exclusively with Jest.
+**This service is the architectural "Schema" of the system.** Every visual node in ReactFlow must have a corresponding
+`Declaration` type in the AST. The parser is responsible for identifying whether a function is a standard `function`,
+a `chart`, or a `table`, and parsing their specific metadata (e.g. chart axis mapping).
 
 **Three pipelines:**
 
@@ -657,7 +658,7 @@ graph building), and Service 5 (transpilation for execution).
 > FlowGraphBuilder/FlowGraphSync/FlowLayoutEngine interfaces.
 
 **Responsibility:** The visual layer. Transforms `ProjectAST` (from Service 3) into ReactFlow-compatible graphs and
-handles the reverse — applying visual editor mutations back to the AST.
+handles the reverse — applying visual editor mutations back to the AST. It also manages **Reactive Nodes** (charts and tables) that subscribe to real-time data pushes from the Execution Engine.
 
 **This service has two distinct layers with different testing strategies:** pure data transformation in `lib/flow/`
 (Jest-tested) and React node components + editor view in `components/` (Cypress-tested). See 04-FLOW-MODELING.md for

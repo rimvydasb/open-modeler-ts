@@ -170,11 +170,20 @@ interface HookCallbacks {
 
 interface HookOutput {
     hook: 'chart' | 'table' | 'log' | 'ai' | 'fetch';
+    /** The ID of the declaration (function) that triggered the hook. */
+    callerId: string;
     timestamp: number;
     payload: unknown;
 }
 ```
 
+## Reactive Refresh Pattern
+
+To ensure charts and tables update automatically after each execution:
+
+1. **Execution Store:** The `useExecution` hook maintains a global (or context-level) state of `HookOutput[]` from the last run.
+2. **Node Subscription:** Each `<ChartNode>` or `<TableNode>` in ReactFlow subscribes to this state, filtering by its own `declaration.id === callerId`.
+3. **Trigger:** When a new `ExecutionResult` is received, the state updates, triggering a re-render of only the affected nodes. This enables real-time visual feedback as the user edits code or inputs and clicks "Run".
 ## Hooks
 
 | Hook      | Category      | Direction     | Host Action                    |

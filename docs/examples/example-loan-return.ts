@@ -97,7 +97,7 @@ function generateLoanSchedule(
 }
 
 /**
- * @nodeType chart
+ * @nodeType chart { "type": "line", "xAxis": "paymentDate", "yAxis": "remainingBalance" }
  * @param schedule
  */
 function renderLoanBalanceChart(schedule: PaymentLine[]): void {

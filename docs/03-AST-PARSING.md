@@ -102,9 +102,11 @@ classDiagram
     class Declaration {
         <<union>>
         FunctionDeclaration
-        InterfaceDeclaration
-        ConstantDeclaration
-        TypeAliasDeclaration
+        ChartDeclaration
+        TableDeclaration
+        FlowDeclaration
+        DataDeclaration
+        InternalDeclaration
     }
 
     class DeclarationBase {
@@ -112,14 +114,14 @@ classDiagram
         +assetId: string
         +name: string
         +displayName: string | undefined
-        +nodeType: NodeType | undefined
+        +nodeType: NodeType
         +visible: boolean
         +documentation: string | undefined
         +sourceRange: SourceRange
     }
 
     class FunctionDeclaration {
-        +kind: "function"
+        +nodeType: "function"
         +parameters: ParameterInfo[]
         +returnType: TypeReference
         +isAsync: boolean
@@ -127,20 +129,51 @@ classDiagram
         +callExpressions: CallExpression[]
     }
 
-    class InterfaceDeclaration {
-        +kind: "interface"
-        +properties: PropertyInfo[]
+    class ChartDeclaration {
+        +nodeType: "chart"
+        +config: ChartConfig
+        +parameters: ParameterInfo[]
+        +returnType: TypeReference
+        +callExpressions: CallExpression[]
     }
 
-    class ConstantDeclaration {
-        +kind: "constant"
+    class TableDeclaration {
+        +nodeType: "table"
+        +config: TableConfig
+        +parameters: ParameterInfo[]
+        +returnType: TypeReference
+        +callExpressions: CallExpression[]
+    }
+
+    class FlowDeclaration {
+        +nodeType: "flow"
+        +parameters: ParameterInfo[]
+        +returnType: TypeReference
+        +callExpressions: CallExpression[]
+    }
+
+    class DataDeclaration {
+        +nodeType: "list"
+        +sourceKind: "interface" | "constant"
+        +properties: PropertyInfo[]
         +typeAnnotation: TypeReference | undefined
-        +properties: PropertyInfo[]
     }
 
-    class TypeAliasDeclaration {
-        +kind: "type-alias"
-        +typeAnnotation: TypeReference
+    class InternalDeclaration {
+        +nodeType: "none"
+        +sourceKind: "function" | "interface" | "constant" | "type-alias"
+    }
+
+    class ChartConfig {
+        +string type
+        +string xAxis
+        +string yAxis
+        +Record~string, any~ options
+    }
+
+    class TableConfig {
+        +string[] columns
+        +number pageSize
     }
 
     class ParameterInfo {
@@ -189,16 +222,27 @@ classDiagram
     ProjectAST *-- Declaration
     ProjectAST *-- ParseDiagnostic
     DeclarationBase <|-- FunctionDeclaration
-    DeclarationBase <|-- InterfaceDeclaration
-    DeclarationBase <|-- ConstantDeclaration
-    DeclarationBase <|-- TypeAliasDeclaration
+    DeclarationBase <|-- ChartDeclaration
+    DeclarationBase <|-- TableDeclaration
+    DeclarationBase <|-- FlowDeclaration
+    DeclarationBase <|-- DataDeclaration
+    DeclarationBase <|-- InternalDeclaration
     FunctionDeclaration *-- ParameterInfo
     FunctionDeclaration *-- TypeReference
     FunctionDeclaration *-- CallExpression
-    InterfaceDeclaration *-- PropertyInfo
-    ConstantDeclaration *-- TypeReference
-    ConstantDeclaration *-- PropertyInfo
-    TypeAliasDeclaration *-- TypeReference
+    ChartDeclaration *-- ChartConfig
+    ChartDeclaration *-- ParameterInfo
+    ChartDeclaration *-- TypeReference
+    ChartDeclaration *-- CallExpression
+    TableDeclaration *-- TableConfig
+    TableDeclaration *-- ParameterInfo
+    TableDeclaration *-- TypeReference
+    TableDeclaration *-- CallExpression
+    FlowDeclaration *-- ParameterInfo
+    FlowDeclaration *-- TypeReference
+    FlowDeclaration *-- CallExpression
+    DataDeclaration *-- PropertyInfo
+    DataDeclaration *-- TypeReference
     ParameterInfo *-- TypeReference
     PropertyInfo *-- TypeReference
     TypeReference *-- TypeReference: typeArguments
@@ -219,7 +263,7 @@ classDiagram
 
 ### Node Type Enum
 
-The `@nodeType` JSDoc tag maps script declarations to visual node types in the flow editor.
+The `@nodeType` JSDoc tag maps script declarations to visual node types in the flow editor and determines the structural type of the `Declaration` in the AST.
 
 ```typescript
 /**
@@ -230,8 +274,29 @@ The `@nodeType` JSDoc tag maps script declarations to visual node types in the f
  * - table     — A visualization node that renders tabular output.
  * - flow      — A flow graph. If it is the root flow function, it defines the main canvas. Otherwise, it renders as a `<SubFlowNode>` containing its own nested graph.
  * - list      — A data-shape node representing a collection type (e.g. an interface used as a list item).
+ * - none      — An internal declaration (type, utility function) not visible in the flow graph.
  */
-type NodeType = 'function' | 'chart' | 'table' | 'flow' | 'list';
+type NodeType = 'function' | 'chart' | 'table' | 'flow' | 'list' | 'none';
+```
+
+### Component Configurations
+
+Specific configurations parsed from JSDoc for specialized node types.
+
+```typescript
+interface ChartConfig {
+    type: 'line' | 'bar' | 'pie' | 'scatter';
+    xAxis?: string;
+    yAxis?: string;
+    /** Additional library-specific options. */
+    options: Record<string, any>;
+}
+
+interface TableConfig {
+    /** Column names to display. If empty, all properties are shown. */
+    columns: string[];
+    pageSize: number;
+}
 ```
 
 ### Source Range
@@ -338,7 +403,7 @@ interface CallExpression {
 
 ### Declaration Base
 
-Common fields shared by all declaration kinds.
+Common fields shared by all declarations. The `nodeType` is the primary discriminator.
 
 ```typescript
 interface DeclarationBase {
@@ -350,12 +415,14 @@ interface DeclarationBase {
     name: string;
     /** Human-readable label from @displayName JSDoc tag. */
     displayName?: string;
-    /** Visual node type from @nodeType JSDoc tag. */
-    nodeType?: NodeType;
+    /** 
+     * The visual node type.
+     * Every declaration has a nodeType. If @nodeType is missing, it defaults to 'none'.
+     */
+    nodeType: NodeType;
     /**
      * Whether this declaration is visible as a node in the flow editor.
-     * Derived from @visible JSDoc tag. Defaults to true when nodeType is present,
-     * false when nodeType is absent or @visible is set to "none" or "hidden".
+     * Derived from @visible JSDoc tag. Defaults to true for all types except 'none'.
      */
     visible: boolean;
     /** Full JSDoc comment body (excluding tag lines). */
@@ -367,11 +434,11 @@ interface DeclarationBase {
 
 ### Function Declaration
 
-Represents a function statement or function expression extracted from the script.
+Represents a standard computational function (`@nodeType function`).
 
 ```typescript
 interface FunctionDeclaration extends DeclarationBase {
-    kind: 'function';
+    nodeType: 'function';
     parameters: ParameterInfo[];
     returnType: TypeReference;
     isAsync: boolean;
@@ -381,48 +448,89 @@ interface FunctionDeclaration extends DeclarationBase {
 }
 ```
 
-### Interface Declaration
+### Chart Declaration
 
-Represents a TypeScript `interface` statement.
+Represents a visualization function that renders a chart (`@nodeType chart`).
 
 ```typescript
-interface InterfaceDeclaration extends DeclarationBase {
-    kind: 'interface';
-    properties: PropertyInfo[];
+interface ChartDeclaration extends DeclarationBase {
+    nodeType: 'chart';
+    /** Configuration for MUI X Charts, parsed from JSDoc @nodeType chart { JSON }. */
+    config: ChartConfig;
+    parameters: ParameterInfo[];
+    returnType: TypeReference;
+    callExpressions: CallExpression[];
 }
 ```
 
-### Constant Declaration
+### Table Declaration
 
-Represents a top-level `const` assignment (e.g. `INPUT_VARIABLES`).
+Represents a visualization function that renders a data grid (`@nodeType table`).
 
 ```typescript
-interface ConstantDeclaration extends DeclarationBase {
-    kind: 'constant';
-    /** Explicit type annotation, if present. */
+interface TableDeclaration extends DeclarationBase {
+    nodeType: 'table';
+    /** Configuration for the data table, parsed from JSDoc. */
+    config: TableConfig;
+    parameters: ParameterInfo[];
+    returnType: TypeReference;
+    callExpressions: CallExpression[];
+}
+```
+
+### Flow Declaration
+
+Represents a sub-graph entry point (`@nodeType flow`).
+
+```typescript
+interface FlowDeclaration extends DeclarationBase {
+    nodeType: 'flow';
+    parameters: ParameterInfo[];
+    returnType: TypeReference;
+    callExpressions: CallExpression[];
+}
+```
+
+### Data Declaration
+
+Represents a data structure definition (`interface` or `const` with `@nodeType list`).
+
+```typescript
+interface DataDeclaration extends DeclarationBase {
+    nodeType: 'list';
+    /** Whether this was defined as an 'interface' or a 'constant' in source. */
+    sourceKind: 'interface' | 'constant';
+    /** Explicit type annotation for constants, or the interface structure. */
     typeAnnotation?: TypeReference;
-    /** Properties extracted from object literal initializers. */
+    /** Properties of the interface or object literal. */
     properties: PropertyInfo[];
 }
 ```
 
-### Type Alias Declaration
+### Internal Declaration
 
-Represents a TypeScript `type` alias statement.
+Represents non-visual declarations (`@nodeType none` or missing).
 
 ```typescript
-interface TypeAliasDeclaration extends DeclarationBase {
-    kind: 'type-alias';
-    typeAnnotation: TypeReference;
+interface InternalDeclaration extends DeclarationBase {
+    nodeType: 'none';
+    /** The original TypeScript construct kind. */
+    sourceKind: 'function' | 'interface' | 'constant' | 'type-alias';
 }
 ```
 
 ### Declaration Union
 
-The discriminated union of all declaration kinds.
+The discriminated union of all declaration kinds using `nodeType` as discriminator.
 
 ```typescript
-type Declaration = FunctionDeclaration | InterfaceDeclaration | ConstantDeclaration | TypeAliasDeclaration;
+type Declaration =
+    | FunctionDeclaration
+    | ChartDeclaration
+    | TableDeclaration
+    | FlowDeclaration
+    | DataDeclaration
+    | InternalDeclaration;
 ```
 
 ## Project AST (Root)
@@ -459,18 +567,19 @@ const projectAST: ProjectAST = {
     },
     declarations: [
         {
-            kind: 'interface',
+            nodeType: 'none',
+            sourceKind: 'interface',
             id: 'PaymentLine',
             name: 'PaymentLine',
             displayName: 'Payment Line',
-            nodeType: undefined,
             visible: false,
             documentation: undefined,
+            assetId: 'loan-script-id',
             sourceRange: {startLine: 15, endLine: 21, startColumn: 1, endColumn: 2},
             properties: [
                 {
                     name: 'paymentDate',
-                    type: {kind: 'primitive', name: 'Date', typeArguments: [], isArray: false, isNullable: false},
+                    type: {kind: 'reference', name: 'Date', typeArguments: [], isArray: false, isNullable: false},
                     isOptional: false,
                     isReadonly: false,
                 },
@@ -501,13 +610,14 @@ const projectAST: ProjectAST = {
             ],
         },
         {
-            kind: 'constant',
+            nodeType: 'list',
+            sourceKind: 'constant',
             id: 'INPUT_VARIABLES',
             name: 'INPUT_VARIABLES',
             displayName: 'Input Variables',
-            nodeType: 'list',
             visible: true,
             documentation: undefined,
+            assetId: 'loan-script-id',
             sourceRange: {startLine: 26, endLine: 31, startColumn: 1, endColumn: 3},
             typeAnnotation: undefined,
             properties: [
@@ -538,14 +648,14 @@ const projectAST: ProjectAST = {
             ],
         },
         {
-            kind: 'function',
+            nodeType: 'function',
             id: 'calculateMonthlyPayment',
             name: 'calculateMonthlyPayment',
             displayName: 'Calculate Monthly Payment',
-            nodeType: 'function',
             visible: true,
             documentation:
                 'Calculates the fixed monthly payment for a loan based on the principal, annual interest rate, and loan term in months.',
+            assetId: 'loan-script-id',
             sourceRange: {startLine: 44, endLine: 49, startColumn: 1, endColumn: 2},
             parameters: [
                 {
@@ -570,13 +680,13 @@ const projectAST: ProjectAST = {
             callExpressions: [],
         },
         {
-            kind: 'function',
+            nodeType: 'function',
             id: 'generateLoanSchedule',
             name: 'generateLoanSchedule',
             displayName: undefined,
-            nodeType: 'function',
             visible: true,
             documentation: undefined,
+            assetId: 'loan-script-id',
             sourceRange: {startLine: 59, endLine: 90, startColumn: 1, endColumn: 2},
             parameters: [
                 {
@@ -611,13 +721,19 @@ const projectAST: ProjectAST = {
             callExpressions: [],
         },
         {
-            kind: 'function',
+            nodeType: 'chart',
+            config: {
+                type: 'line',
+                xAxis: 'paymentDate',
+                yAxis: 'remainingBalance',
+                options: {color: '#8884d8'},
+            },
             id: 'renderLoanBalanceChart',
             name: 'renderLoanBalanceChart',
             displayName: undefined,
-            nodeType: 'chart',
             visible: true,
             documentation: undefined,
+            assetId: 'loan-script-id',
             sourceRange: {startLine: 96, endLine: 98, startColumn: 1, endColumn: 2},
             parameters: [
                 {
@@ -627,18 +743,20 @@ const projectAST: ProjectAST = {
                 },
             ],
             returnType: {kind: 'void', name: 'void', typeArguments: [], isArray: false, isNullable: false},
-            isAsync: false,
-            isExported: false,
             callExpressions: [],
         },
         {
-            kind: 'function',
+            nodeType: 'table',
+            config: {
+                columns: ['paymentDate', 'principalPaid', 'interestPaid', 'remainingBalance'],
+                pageSize: 12,
+            },
             id: 'renderLoanScheduleTable',
             name: 'renderLoanScheduleTable',
             displayName: undefined,
-            nodeType: 'table',
             visible: true,
             documentation: undefined,
+            assetId: 'loan-script-id',
             sourceRange: {startLine: 104, endLine: 106, startColumn: 1, endColumn: 2},
             parameters: [
                 {
@@ -648,23 +766,19 @@ const projectAST: ProjectAST = {
                 },
             ],
             returnType: {kind: 'void', name: 'void', typeArguments: [], isArray: false, isNullable: false},
-            isAsync: false,
-            isExported: false,
             callExpressions: [],
         },
         {
-            kind: 'function',
+            nodeType: 'flow',
             id: 'main',
             name: 'main',
             displayName: undefined,
-            nodeType: 'flow',
             visible: true,
             documentation: undefined,
+            assetId: 'loan-script-id',
             sourceRange: {startLine: 111, endLine: 117, startColumn: 1, endColumn: 2},
             parameters: [],
             returnType: {kind: 'void', name: 'void', typeArguments: [], isArray: false, isNullable: false},
-            isAsync: false,
-            isExported: true,
             callExpressions: [
                 {targetName: 'calculateMonthlyPayment', arguments: ['loanAmount', 'annualInterestRate', 'termMonths']},
                 {

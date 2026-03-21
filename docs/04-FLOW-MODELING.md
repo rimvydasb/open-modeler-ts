@@ -119,17 +119,17 @@ The flow editor renders a fixed set of node types. Each node type has a correspo
 
 - **Component:** `components/nodes/chart-node/chart-node.tsx`
 - **Node Type:** `chart`
-- **Display:** Renders an inline MUI X Charts preview based on the last execution output. Chart type (line, bar, pie)
-  is inferred from the data shape or from `ChartConfig.type`.
-- **Edit:** TBD — may support chart type selection via dropdown.
+- **Declaration:** `ChartDeclaration`
+- **Display:** Renders an inline MUI X Charts preview based on the last execution output. Chart configuration (type, axes) is derived from `ChartDeclaration.config`.
+- **Edit:** Configuration can be edited via a specialized UI form, which updates the JSDoc `@nodeType chart { JSON }` string in the source.
 
 ### `<TableNode>` — `table`
 
 - **Component:** `components/nodes/table-node/table-node.tsx`
 - **Node Type:** `table`
-- **Display:** Renders a compact data table preview. Column headers are derived from object keys. Shows a limited
-  number of rows with a "show more" affordance.
-- **Edit:** TBD — may support column visibility and sort configuration.
+- **Declaration:** `TableDeclaration`
+- **Display:** Renders a compact data table preview. Column headers and page size are derived from `TableDeclaration.config`.
+- **Edit:** Configuration can be edited via a specialized UI form, which updates the JSDoc in source.
 
 ### `<SubFlowNode>` and Root Flow — `flow`
 
