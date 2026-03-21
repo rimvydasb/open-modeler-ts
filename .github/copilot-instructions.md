@@ -1,5 +1,18 @@
 # Copilot Instructions — EdgeRules Modeler
 
+### Documentation & Architecture (CRITICAL)
+
+The project architecture has been formally refined into a **7-Service Service-Oriented Architecture**. Always refer to these documents before implementation:
+
+-   **Index:** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — System overview, routing, and high-level structure.
+-   **Service 1:** [docs/01-PROJECTS-SERVICE.md](docs/01-PROJECTS-SERVICE.md) — Multi-project workspace and metadata storage.
+-   **Service 2:** [docs/02-PROJECT-SERVICE.md](docs/02-PROJECT-SERVICE.md) — Single project assets and types management.
+-   **Service 3:** [docs/03-AST-PARSING.md](docs/03-AST-PARSING.md) — `ts-morph` parsing, multi-file compilation, and `SourceMutator`.
+-   **Service 4:** [docs/04-FLOW-MODELING.md](docs/04-FLOW-MODELING.md) — ReactFlow modeling, scoped graph derivation, and visual mutations.
+-   **Service 5:** [docs/05-EXECUTION-ENGINE.md](docs/05-EXECUTION-ENGINE.md) — QuickJS WASM sandbox, FFI hooks, and reactive data refresh.
+-   **Service 6:** [docs/06-TESTING-SERVICE.md](docs/06-TESTING-SERVICE.md) — Test case orchestration and assertion evaluation.
+-   **Service 7:** [docs/07-DEPLOYMENT-SERVICE.md](docs/07-DEPLOYMENT-SERVICE.md) — **(OUT OF SCOPE FOR MVP)**.
+
 ## Commands
 
 ```bash
