@@ -14,17 +14,17 @@ Project is in design phase.
 
 ### Current Design Documents
 
-| Document                                                       | Service                    | Status |
-|----------------------------------------------------------------|----------------------------|--------|
-| [ARCHITECTURE.md](ARCHITECTURE.md)                             | All — master overview      | Active |
-| [01-PROJECTS-SERVICE.md](01-PROJECTS-SERVICE.md)               | Projects Management (1)    | Active |
-| [02-PROJECT-SERVICE.md](02-PROJECT-SERVICE.md)                 | Project Management (2)     | Active |
-| [03-AST-PARSING.md](03-AST-PARSING.md)                        | AST Parsing (3)            | Active |
-| [04-FLOW-MODELING.md](04-FLOW-MODELING.md)                     | Flow Modeling (4)          | Active |
-| [05-EXECUTION-ENGINE.md](05-EXECUTION-ENGINE.md)               | Execution Engine (5)       | Active |
-| [06-TESTING-SERVICE.md](06-TESTING-SERVICE.md)                 | Testing Service (6)        | Active |
-| [07-DEPLOYMENT-SERVICE.md](07-DEPLOYMENT-SERVICE.md)           | Deployment Service (7)     | Active |
-| [examples/example-loan-return.ts](examples/example-loan-return.ts) | Reference example      | —      |
+| Document                                                           | Service                 | Status |
+|--------------------------------------------------------------------|-------------------------|--------|
+| [ARCHITECTURE.md](ARCHITECTURE.md)                                 | All — master overview   | Active |
+| [01-PROJECTS-SERVICE.md](01-PROJECTS-SERVICE.md)                   | Projects Management (1) | Active |
+| [02-PROJECT-SERVICE.md](02-PROJECT-SERVICE.md)                     | Project Management (2)  | Active |
+| [03-AST-PARSING.md](03-AST-PARSING.md)                             | AST Parsing (3)         | Active |
+| [04-FLOW-MODELING.md](04-FLOW-MODELING.md)                         | Flow Modeling (4)       | Active |
+| [05-EXECUTION-ENGINE.md](05-EXECUTION-ENGINE.md)                   | Execution Engine (5)    | Active |
+| [06-TESTING-SERVICE.md](06-TESTING-SERVICE.md)                     | Testing Service (6)     | Active |
+| [07-DEPLOYMENT-SERVICE.md](07-DEPLOYMENT-SERVICE.md)               | Deployment Service (7)  | Active |
+| [examples/example-loan-return.ts](examples/example-loan-return.ts) | Reference example       | —      |
 
 ## Master Business Case
 
@@ -82,15 +82,19 @@ sequenceDiagram
 2. **TS Source Code** — Raw source is returned to the caller.
 3. **Parse & Transpile** — The AST parser (via `ts-morph`) extracts function names, parameter types, and return
    shapes. Concurrently, it transpiles the TypeScript source into executable JavaScript.
-4. **AST Signatures + Executable JS** — Both the extracted metadata (signatures) and the executable JS are returned to the host. The host uses signatures to construct the visual ReactFlow graph and to map user inputs properly.
+4. **AST Signatures + Executable JS** — Both the extracted metadata (signatures) and the executable JS are returned to
+   the host. The host uses signatures to construct the visual ReactFlow graph and to map user inputs properly.
 
 ## Phase 2 — Sandboxed Execution
 
-5. **Init sandbox & Inject Executable JS** — A fresh QuickJS runtime instance is created: isolated heap, own global scope, no access to
+5. **Init sandbox & Inject Executable JS** — A fresh QuickJS runtime instance is created: isolated heap, own global
+   scope, no access to
    browser DOM or fetch. The transpiled JavaScript is loaded into the VM.
-6. **Register host hooks** — The host injects bridge functions like `ai(prompt)` into the sandbox global scope before the script runs. Business
+6. **Register host hooks** — The host injects bridge functions like `ai(prompt)` into the sandbox global scope before
+   the script runs. Business
    logic can call it like any normal async function.
-7. **Pass inputs** — The host uses the previously extracted AST signatures to correctly map UI state variables and inject them as parameters into the Guest execution context.
+7. **Pass inputs** — The host uses the previously extracted AST signatures to correctly map UI state variables and
+   inject them as parameters into the Guest execution context.
 8. **Run script** — QuickJS executes the logic inside the sandbox.
 9. **ai() call — VM suspends** — When business logic hits `await ai("...")`, the VM yields control back to the SPA
    host and waits for the Promise to resolve.
@@ -138,6 +142,80 @@ Each execution run gets a fresh sandbox instance. Disposing it after the run fre
 globals, closures, or module-level state persist into the next run. This is intentional — business logic scripts are
 stateless by design.
 
+## Routing Strategy & SPA Architecture
+
+To support **Static Site Generation (SSG)** and seamless deployment to **AWS S3**, the EdgeRules Modeler uses a *
+*Hash-based Routing (`#`)** strategy. This ensures that dynamic routes work without complex server-side redirects or
+CloudFront error handlers, as the browser always loads the root `index.html` and parses the hash for state.
+
+### Next.js Configuration
+
+The project is configured for static export:
+
+```typescript
+const nextConfig: NextConfig = {
+    output: 'export',
+    reactStrictMode: true,
+    typedRoutes: true,
+    trailingSlash: true,
+};
+```
+
+### Hash-Based Routing Strategy
+
+Using Hash-based Routing is the "bulletproof" way to achieve clean-looking URLs on a static host. Anything after the `#`
+is never sent to the server (S3); the browser successfully loads the physical file (usually root), and React handles
+the "Dynamic State" from the hash.
+
+#### Route Map
+
+| View                     | Path                              | Logic                                                        |
+|:-------------------------|:----------------------------------|:-------------------------------------------------------------|
+| **Landing**              | `/`                               | Workspace & Public Library.                                  |
+| **Flow Editor**          | `/#flow/:projectId/`              | Visual programming canvas using ReactFlow.                   |
+| **Flow Editor (Nested)** | `/#flow/:projectId/:key`          | ReactFlow for function nodes (nested).                       |
+| **Context Editor**       | `/#visual-editor/:projectId/:key` | Advanced editor for decision tables, lists, etc.             |
+| **Code Editor**          | `/#code-editor/:projectId/:key`   | ACE Editor for project context.                              |
+| **Types**                | `/#types/:projectId`              | Custom type library & schemas.                               |
+| **Tests Summary**        | `/#tests/:projectId`              | Listing of all node tests and results.                       |
+| **Test Editor**          | `/#tests/:projectId/:key`         | Detailed test case management for given function or context. |
+| **App Preview**          | `/#app/:projectId`                | Interactive "Workbook" GUI.                                  |
+| **Deployment**           | `/#deploy/:projectId`             | Decision Service config & targets.                           |
+| **Health**               | `/#health/`                       | Health check endpoint.                                       |
+
+#### Route Parameters
+
+- **`:projectId`**: The unique identifier for the EdgeRules project (e.g., `abc-project`).
+- **`:key`**: The context key or path within the project's data structure (e.g., `abc-node`).
+- **Validation**: `projectId` and `key` must be alphanumeric, allowing only `-` or `_`.
+- Use `root` for the top-level project context. If key is empty, it defaults to `root`.
+- Key is case-insensitive and presented as lower-case in the URL.
+
+#### Key Context Explanation
+
+Given the following project content for `abc-project`:
+
+```typescript
+/**
+ * @nodeType function
+ */
+function calculateMonthlyPayment(principal: number, annualRate: number, months: number): number {
+    const monthlyRate = annualRate / 100 / 12;
+    if (monthlyRate === 0) return principal / months;
+    return principal * (monthlyRate * Math.pow(1 + monthlyRate, months)) / (Math.pow(1 + monthlyRate, months) - 1);
+}
+```
+
+- `/#flow/abc-project/` — will open the Flow Editor for the entire project: `abc-project`.
+- `/#code-editor/abc-project/calculatemonthlypayment` — will open the Code Editor focused on the
+  `calculateMonthlyPayment` function within the project.
+
+### Physical File Structure
+
+To support the Single Page Application (SPA) architecture within a Static Site Generation (SSG) build (
+`output: 'export'`), we adopt a **Feature-First & Colocated** folder structure. This keeps the `app/` directory clean
+and ensures that complex views are modular and self-contained.
+
 ## Proposed Project Component Structure
 
 The application uses a **layered, service-oriented architecture** within a single Next.js project. This is intentionally
@@ -174,12 +252,14 @@ open-modeler-ts/
 ├── cypress/                                  # E2E tests (frontend, Cypress)
 │   ├── e2e/
 │   │   ├── health.cy.ts                      # Critical: must pass before all others
-│   │   ├── workspace.cy.ts                   # Service 1 — project listing, create, delete
-│   │   ├── project-editor.cy.ts              # Service 2 — metadata, assets, types editing
+│   │   ├── landing.cy.ts                     # Landing view
 │   │   ├── flow-editor.cy.ts                 # Service 4 — flow graph interaction
+│   │   ├── visual-editor.cy.ts               # Advanced context editor
 │   │   ├── code-editor.cy.ts                 # Service 3 — code editing round-trip
-│   │   ├── execution.cy.ts                   # Service 5 — script execution, hook output
-│   │   ├── test-manager.cy.ts                # Service 6 — test case management
+│   │   ├── types.cy.ts                       # Types management
+│   │   ├── tests-summary.cy.ts               # Service 6 — tests listing
+│   │   ├── test-editor.cy.ts                 # Service 6 — test case management
+│   │   ├── app-preview.cy.ts                 # Service 5 — Interactive app GUI
 │   │   └── deployment.cy.ts                  # Service 7 — deployment configuration
 │   ├── fixtures/                             # Test data (sample projects, scripts)
 │   └── support/                              # Cypress helpers, commands, IndexedDB cleanup
@@ -224,39 +304,33 @@ open-modeler-ts/
 │   │   │       └── list-node.tsx             # Data-shape / collection node
 │   │   │
 │   │   └── views/                            # Feature views (swapped by hash router)
-│   │       ├── workspace/                    # → Service 1: Projects listing
-│   │       │   ├── workspace-view.tsx        # Main workspace grid
-│   │       │   ├── project-card.tsx          # Individual project card
-│   │       │   └── create-project-dialog.tsx # New project dialog
-│   │       ├── flow-editor/                  # → Service 4: ReactFlow editor
+│   │       ├── landing/                      # → `/` Landing view
+│   │       │   └── landing-view.tsx          # Workspace & Public Library
+│   │       ├── flow-editor/                  # → `/#flow/:projectId/:key`
 │   │       │   ├── flow-editor-view.tsx      # Main flow canvas
 │   │       │   ├── flow-toolbar.tsx          # Flow-specific actions
 │   │       │   └── flow-sidebar.tsx          # Node palette / properties
-│   │       ├── code-editor/                  # → Service 2/3: CodeMirror editor
+│   │       ├── visual-editor/                # → `/#visual-editor/:projectId/:key`
+│   │       │   └── visual-editor-view.tsx    # Context Editor View
+│   │       ├── code-editor/                  # → `/#code-editor/:projectId/:key`
 │   │       │   ├── code-editor-view.tsx      # Editor with TypeScript support
 │   │       │   └── editor-toolbar.tsx        # Editor actions (save, format, run)
-│   │       ├── types-editor/                 # → Service 2: Interface management
+│   │       ├── types-editor/                 # → `/#types/:projectId`
 │   │       │   ├── types-editor-view.tsx     # Types listing and editing
 │   │       │   └── type-form.tsx             # Individual type/interface form
-│   │       ├── assets-browser/               # → Service 2: Asset management
-│   │       │   ├── assets-browser-view.tsx   # Asset listing with filters
-│   │       │   ├── asset-list.tsx            # Sortable asset table
-│   │       │   └── asset-import-dialog.tsx   # Import dialog (file upload, paste)
-│   │       ├── app-preview/                  # → Service 5: Execution output
+│   │       ├── app-preview/                  # → `/#app/:projectId`
 │   │       │   ├── app-preview-view.tsx      # Preview container
 │   │       │   ├── chart-panel.tsx           # chart() hook output
 │   │       │   ├── table-panel.tsx           # table() hook output
 │   │       │   └── console-panel.tsx         # log() hook output
-│   │       ├── tests-manager/                # → Service 6: Test management
+│   │       ├── tests-manager/                # → `/#tests/:projectId` & `/#tests/:projectId/:key`
 │   │       │   ├── tests-manager-view.tsx    # Test suite listing
 │   │       │   ├── test-case-editor.tsx      # Individual test case form
 │   │       │   └── test-results-panel.tsx    # Execution results display
-│   │       ├── deploy-manager/               # → Service 7: Deployment
-│   │       │   ├── deploy-manager-view.tsx   # Deployment targets listing
-│   │       │   ├── target-config.tsx         # Target configuration form
-│   │       │   └── environment-editor.tsx    # Environment variables editor
-│   │       └── landing/                      # Public landing / marketing
-│   │           └── landing-view.tsx
+│   │       └── deploy-manager/               # → `/#deploy/:projectId`
+│   │           ├── deploy-manager-view.tsx   # Deployment targets listing
+│   │           ├── target-config.tsx         # Target configuration form
+│   │           └── environment-editor.tsx    # Environment variables editor
 │   │
 │   ├── hooks/                                # React hooks (bridge lib/ → components/)
 │   │   ├── use-hash-route.ts                 # Hash-based SPA navigation
@@ -582,7 +656,8 @@ graph building), and Service 5 (transpilation for execution).
 
 ### Service 4 — Flow Modeling (`lib/flow/` + `components/nodes/` + `views/flow-editor/`)
 
-> **Architecture document:** [04-FLOW-MODELING.md](04-FLOW-MODELING.md) — node specifications, bidirectional flow, FlowGraphBuilder/FlowGraphSync/FlowLayoutEngine interfaces.
+> **Architecture document:** [04-FLOW-MODELING.md](04-FLOW-MODELING.md) — node specifications, bidirectional flow,
+> FlowGraphBuilder/FlowGraphSync/FlowLayoutEngine interfaces.
 
 **Responsibility:** The visual layer. Transforms `ProjectAST` (from Service 3) into ReactFlow-compatible graphs and
 handles the reverse — applying visual editor mutations back to the AST.
@@ -838,7 +913,8 @@ default to `function` node type; `@visible false` hides them.
 
 #### 8. `ProjectAST.metadata` is sparse
 
-The `ProjectAST` interface has a `metadata` field, but its shape is not defined in 03-AST-PARSING.md beyond the top-level
+The `ProjectAST` interface has a `metadata` field, but its shape is not defined in 03-AST-PARSING.md beyond the
+top-level
 structure. What goes in metadata? Parse timestamps? Source hash? Version?
 
 **Recommendation:** Define a `ParseMetadata` interface or defer metadata to Post-MVP.
