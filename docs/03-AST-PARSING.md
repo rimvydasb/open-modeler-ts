@@ -724,13 +724,15 @@ graph LR
         SP --> AST_OUT
     end
 
-    subgraph SerializationPipeline["Serialization Pipeline (AST → Source)"]
+    subgraph MutationPipeline["Mutation Pipeline (Visual Edit → Source)"]
         direction TB
-        AST_IN["ProjectAST"]
-        ASTSER["AstSerializer"]
-        SRC_OUT["TypeScript Source<br/>(string updates)"]
-        AST_IN --> ASTSER
-        ASTSER --> SRC_OUT
+        SRC_IN["ProjectAsset[]"]
+        MUT["FlowMutation[]"]
+        MUTATOR["SourceMutator"]
+        SRC_OUT["ProjectAsset[]<br/>(updated string)"]
+        SRC_IN --> MUTATOR
+        MUT --> MUTATOR
+        MUTATOR --> SRC_OUT
     end
 
     subgraph TranspilationPipeline["Transpilation Pipeline (Assets → Executable JS)"]
@@ -830,22 +832,20 @@ function analyzeCallGraph(
 **Test strategy:** Provide function bodies with various call patterns (simple calls, chained calls, nested calls,
 calls to unknowns). Assert only top-level function references are captured.
 
-#### AstSerializer
+#### SourceMutator
 
-Reconstructs TypeScript source from a `ProjectAST`. Used when the flow editor modifies the graph and those changes
-need to be written back to source code.
+Applies visual flow editor mutations directly to the underlying TypeScript source strings using `ts-morph`. Since `ProjectAST` no longer holds the function bodies or constant initializers (to prevent memory bloat and state sync issues), we must mutate the `ProjectAsset` directly rather than re-serializing the entire AST.
 
 ```typescript
 /**
- * Serializes a ProjectAST back to a TypeScript source string.
- * Reconstructs JSDoc annotations, function signatures, interfaces, and constants.
+ * Applies a list of flow editor mutations to the project's source code.
+ * Reconstructs a temporary ts-morph project in memory, applies the AST changes,
+ * and returns the updated ProjectAsset[].
  */
-function serializeAst(ast: ProjectAST): string;
+function applyMutationsToSource(assets: ProjectAsset[], mutations: FlowMutation[]): ProjectAsset[];
 ```
 
-**Test strategy:** Round-trip testing. Parse a source string to AST, serialize back, re-parse, and assert structural
-equivalence. Also test incremental mutations (add a parameter, remove a function) and verify the output is valid
-TypeScript.
+**Test strategy:** Round-trip testing. Provide a `ProjectAsset` array, apply a mutation (e.g. `add-node`, `update-parameter`, `add-edge`), and assert the resulting string is valid TypeScript with the expected structural changes.
 
 #### Transpiler
 

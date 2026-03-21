@@ -69,7 +69,7 @@ classDiagram
     }
 
     class FlowGraphSync {
-        +applyFlowMutations(ast, mutations) ProjectAST
+        +applyFlowMutations(assets: ProjectAsset[], mutations: FlowMutation[]) ProjectAsset[]
     }
 
     class FlowLayoutEngine {
@@ -86,7 +86,6 @@ classDiagram
 
     FlowGraphBuilder ..> ProjectAST : reads
     FlowGraphBuilder ..> FlowGraph : produces
-    FlowGraphSync ..> ProjectAST : reads + writes
     FlowGraphSync ..> FlowMutation : consumes
     FlowLayoutEngine ..> FlowGraph : repositions nodes
 ```
@@ -181,8 +180,7 @@ correct edges are derived from call expressions, and positions are assigned.
 
 ### FlowGraphSync
 
-Applies flow editor mutations back to the `ProjectAST`. This is the reverse direction — when users interact with the
-visual editor (adding nodes, connecting edges, editing parameters), those changes must be reflected in the AST.
+Applies flow editor mutations back to the project's source files. This is the reverse direction — when users interact with the visual editor (adding nodes, connecting edges, editing parameters), those changes must be reflected directly in the source code. Because the `ProjectAST` no longer stores function bodies, this synchronization is delegated to the `SourceMutator` in Service 3.
 
 ```typescript
 type FlowMutation =
@@ -195,14 +193,13 @@ type FlowMutation =
     | { type: 'rename-node'; nodeId: string; newName: string };
 
 /**
- * Applies a list of flow editor mutations to the ProjectAST.
- * Returns a new ProjectAST (immutable update).
+ * Applies a list of flow editor mutations to the underlying TypeScript source.
+ * Delegates to Service 3's SourceMutator.
  */
-function applyFlowMutations(ast: ProjectAST, mutations: FlowMutation[]): ProjectAST;
+function applyFlowMutations(assets: ProjectAsset[], mutations: FlowMutation[]): ProjectAsset[];
 ```
 
-**Test strategy:** Apply mutations to known ASTs and assert the resulting AST reflects the change. Verify that
-serializing the mutated AST (via Service 3's `AstSerializer`) produces valid TypeScript.
+**Test strategy:** Apply mutations to known source strings and assert the resulting code reflects the change.
 
 ### FlowLayoutEngine
 
@@ -255,8 +252,7 @@ flowchart LR
 
     subgraph "Visual → Source (write path)"
         VE -->|user interaction| MUT["FlowMutation[]"]
-        MUT -->|FlowGraphSync| AST2["ProjectAST′"]
-        AST2 -->|AstSerializer| TS2["TypeScript Source′"]
+        MUT -->|FlowGraphSync + SourceMutator| TS2["TypeScript Source′"]
     end
 
     TS2 -.->|re-parse loop| AST
@@ -264,10 +260,10 @@ flowchart LR
 
 When a user adds a new node in the flow editor:
 
-1. `FlowGraphSync` receives an `add-node` mutation
-2. It creates a new `FunctionDeclaration` in the `ProjectAST`
-3. The AST Serializer (Service 3) converts the updated AST back to TypeScript source
-4. The source is persisted and re-parsed, completing the round-trip
+1. `FlowGraphSync` receives an `add-node` mutation.
+2. It delegates to the `SourceMutator` (Service 3), which uses `ts-morph` to inject a new function declaration directly into the source code string.
+3. The updated source is persisted to IndexedDB.
+4. The source is re-parsed into a new `ProjectAST`, completing the round-trip.
 
 ## Persistence Model
 

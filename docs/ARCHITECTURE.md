@@ -637,7 +637,7 @@ component is a pure function or stateless class, tested exclusively with Jest.
 | Pipeline      | Components                                                     | Direction           |
 |---------------|----------------------------------------------------------------|---------------------|
 | Parsing       | SourceParser → JsDocExtractor, TypeResolver, CallGraphAnalyzer | Source → AST        |
-| Serialization | AstSerializer                                                  | AST → Source        |
+| Mutation      | SourceMutator                                                  | Visual Edits → Source |
 | Transpilation | Transpiler, HookRewriter                                       | Source → QuickJS JS |
 
 **Parser extensibility:** `parser-interface.ts` defines the abstract contract. The `typescript/` directory implements
@@ -783,8 +783,8 @@ that can be plugged in later without refactoring. Open Modeler will act purely a
 | Service        | Scope                                                     |
 |----------------|-----------------------------------------------------------|
 | Project (2)    | CSV/JSON importers. Utility and service asset kinds.      |
-| AST (3)        | AstSerializer (AST → source round-trip). HookRewriter.    |
-| Flow (4)       | FlowGraphSync (mutations → AST). Layout engine.           |
+| AST (3)        | SourceMutator (Visual Edits → Source string). HookRewriter.    |
+| Flow (4)       | FlowGraphSync (mutations → SourceMutator). Layout engine.           |
 | Engine (5)     | Bidirectional hooks (ai, fetch). Security layer.          |
 | Testing (6)    | Test case CRUD. Simple assertion runner.                  |
 
@@ -809,19 +809,19 @@ that can be plugged in later without refactoring. Open Modeler will act purely a
 
 ```mermaid
 flowchart LR
-    A["Business Case #3:<br/>'Flow editor changes are<br/>serialized back to the script'"] -->|requires| B["AstSerializer"]
+    A["Business Case #3:<br/>'Flow editor changes are<br/>serialized back to the script'"] -->|requires| B["SourceMutator"]
     A -->|requires| C["FlowGraphSync"]
     B -->|listed as| D["Post-MVP ❌"]
     C -->|listed as| D
 ```
 
 **Business Case #3** states: *"Flow editor changes are serialized back to the script and saved in IndexedDB."*
-This requires `AstSerializer` (AST → source) and `FlowGraphSync` (mutations → AST) — both listed as **Post-MVP**.
+This requires `SourceMutator` (mutating the source string) and `FlowGraphSync` (sending visual mutations to the mutator) — both listed as **Post-MVP**.
 Without them, the flow editor is **read-only** in MVP. This either contradicts the business case, or the MVP scope
 table needs updating.
 
 **Decision required:** Is a read-only flow editor acceptable for MVP? If yes, update Business Case #3 to reflect
-phased delivery. If no, move `AstSerializer` and `FlowGraphSync` into MVP scope.
+phased delivery. If no, move `SourceMutator` and `FlowGraphSync` into MVP scope.
 
 ---
 
