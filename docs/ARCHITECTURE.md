@@ -6,8 +6,7 @@ Project is in design phase.
 
 - Entry document: [ARCHITECTURE.md](ARCHITECTURE.md) — master overview, service map, and project structure.
 - All design documents reside in the `docs/` folder with the following naming conventions:
-    - `*_ARCH.md` — Architecture documents defining the initial service, component, or feature architecture. Created
-      first during the design phase.
+    - `NN-SERVICE-NAME.md` — Numerically prefixed architecture documents defining the 7 core service bounded contexts.
     - `*_REQ.md` — High-level requirements used to design proper user stories. Added after architecture is stable.
     - `*_STORY.md` — Implementation stories that guide development of specific features or components.
     - `*_SPEC.md` — Completed stories appear as specifications that can be referenced by other stories or documents.
@@ -23,7 +22,7 @@ Project is in design phase.
 | [04-FLOW-MODELING.md](04-FLOW-MODELING.md)                         | Flow Modeling (4)       | Active |
 | [05-EXECUTION-ENGINE.md](05-EXECUTION-ENGINE.md)                   | Execution Engine (5)    | Active |
 | [06-TESTING-SERVICE.md](06-TESTING-SERVICE.md)                     | Testing Service (6)     | Active |
-| [07-DEPLOYMENT-SERVICE.md](07-DEPLOYMENT-SERVICE.md)               | Deployment Service (7)  | Active |
+| [07-DEPLOYMENT-SERVICE.md](07-DEPLOYMENT-SERVICE.md)               | Deployment Service (7)  | OUT OF SCOPE |
 | [examples/example-loan-return.ts](examples/example-loan-return.ts) | Reference example       | —      |
 
 ## Master Business Case
