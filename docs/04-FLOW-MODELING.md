@@ -65,7 +65,7 @@ classDiagram
     }
 
     class FlowGraphBuilder {
-        +buildFlowGraph(ast: ProjectAST) FlowGraph
+        +buildFlowGraph(ast: ProjectAST, targetFlowId?: string) FlowGraph
     }
 
     class FlowGraphSync {
@@ -93,20 +93,13 @@ classDiagram
 
 ## Flow Graph Derivation
 
-The flow graph is derived from the `ProjectAST` (defined in [03-AST-PARSING.md](03-AST-PARSING.md)) using these rules:
+The flow graph is **scoped** to a specific flow function (the `targetFlowId`). It is derived from the `ProjectAST` (defined in [03-AST-PARSING.md](03-AST-PARSING.md)) using these rules:
 
-1. **Nodes** — Each `Declaration` with a `nodeType` annotation becomes a ReactFlow node. The `id`, `displayName`
-   (or `name`), and `nodeType` map directly to the node's visual representation.
-
-2. **Edges** — Edges are derived from `FunctionDeclaration.callExpressions`. For each call expression in a function
-   body, an edge is created from the called function's node to the calling function's node (data flows from callee
-   output to caller input).
-
-3. **Ports** — Input ports are derived from `ParameterInfo[]` and output ports from `returnType`. Port type labels
-   come from `TypeReference.name`.
-
-4. **Constants as Input Nodes** — A `ConstantDeclaration` that is destructured in the entry-point function becomes an
-   input node with output ports matching its properties.
+1. **Graph Scope:** The builder starts at the function defined by `targetFlowId` (which defaults to the AST's `rootFlowId`). 
+2. **Nodes:** The builder analyzes the code body of the target flow function. In a flow function, each line of code typically follows the pattern `{variable} = {function}({args})`. For every function called within the body, a ReactFlow node is generated. The `id`, `displayName` (or `name`), and `nodeType` map directly to the called function's declaration.
+3. **Edges (Data Flow):** Edges are derived from the `CallExpression` relationships and variable assignments within the target flow function's body. By parsing which output `{variable}` is passed as `{args}` into subsequent functions, the builder knows exactly which output pin connects to which input pin.
+4. **Ports:** Input ports are derived from `ParameterInfo[]` and output ports from `returnType`. Port type labels come from `TypeReference.name`.
+5. **Constants as Input Nodes:** A `ConstantDeclaration` that is destructured or passed as an argument within the target flow function becomes an input node with output ports matching its properties.
 
 ## Nodes
 
@@ -144,8 +137,8 @@ The flow editor renders a fixed set of node types. Each node type has a correspo
 - **Component (Sub-Flow):** `components/nodes/subflow-node/subflow-node.tsx`
 - **Node Type:** `flow`
 - **Display:** 
-  - **Root Flow:** If a function (e.g., `main()`) is tagged with `@nodeType flow` and acts as the entry point, it is **not** rendered as a visible node. Instead, it defines the root ReactFlow canvas itself.
-  - **Sub-Flow Node:** If other functions are tagged with `@nodeType flow` (i.e., they are not the root entry point), they are rendered as a `<SubFlowNode>`.
+  - **Root Flow:** If a function (e.g., `main()`) is tagged with `@nodeType flow` and acts as the root flow, it is **not** rendered as a visible node. Instead, it defines the root ReactFlow canvas itself.
+  - **Sub-Flow Node:** If other functions are tagged with `@nodeType flow` (i.e., they are not the root flow), they are rendered as a `<SubFlowNode>`.
 - **Edit:** 
   - **Root Flow:** Users interact with the ReactFlow canvas directly in the flow editor view (`views/flow-editor/`).
   - **Sub-Flow Node:** Interacting with a `<SubFlowNode>` will navigate into and open another ReactFlow canvas specifically for that sub-graph.
@@ -173,11 +166,14 @@ interface FlowGraph {
 }
 
 /**
- * Builds a ReactFlow graph from a ProjectAST.
- * Only includes declarations where visible === true.
- * Derives edges from CallExpression relationships.
+ * Builds a scoped ReactFlow graph from a ProjectAST starting from a specific flow function.
+ * - targetFlowId: The ID of the flow function to render (from the route /#flow/:projectId/:targetFlowId).
+ *   If omitted or "root", defaults to the AST's `rootFlowId`.
+ * 
+ * Traverses the Call Graph starting from the target flow function, deriving edges 
+ * from CallExpressions within that function's body.
  */
-function buildFlowGraph(ast: ProjectAST): FlowGraph;
+function buildFlowGraph(ast: ProjectAST, targetFlowId?: string): FlowGraph;
 ```
 
 **Test strategy:** Provide known `ProjectAST` structures, assert the correct nodes are created (visible only),
@@ -229,6 +225,7 @@ interface FlowNode {
     id: string;
     type: NodeType;
     position: { x: number; y: number };
+    parentId?: string; // Used to visually nest nodes within sub-flows
     data: {
         declaration: Declaration;
         displayName: string;

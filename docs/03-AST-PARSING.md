@@ -88,7 +88,8 @@ classDiagram
     class ProjectAST {
         +projectMeta: ProjectMeta
         +declarations: Declaration[]
-        +entryPoint: string | undefined
+        +rootFlowId: string | undefined
+        +modelType: "workbook" | "service"
         +errors: ParseDiagnostic[]
     }
 
@@ -227,7 +228,7 @@ The `@nodeType` JSDoc tag maps script declarations to visual node types in the f
  * - function  — A computation step rendered as a standard node.
  * - chart     — A visualization node that renders MUI X Charts output.
  * - table     — A visualization node that renders tabular output.
- * - flow      — A flow graph. If it is the root entry point, it defines the main canvas. Otherwise, it renders as a `<SubFlowNode>` containing its own nested graph.
+ * - flow      — A flow graph. If it is the root flow function, it defines the main canvas. Otherwise, it renders as a `<SubFlowNode>` containing its own nested graph.
  * - list      — A data-shape node representing a collection type (e.g. an interface used as a list item).
  */
 type NodeType = 'function' | 'chart' | 'table' | 'flow' | 'list';
@@ -440,8 +441,10 @@ interface ProjectAST {
     projectMeta: ProjectMeta;
     /** All top-level declarations found in the script. */
     declarations: Declaration[];
-    /** Name of the entry-point function (the one tagged @nodeType flow), if any. */
-    entryPoint?: string;
+    /** The declaration ID of the root flow function. */
+    rootFlowId?: string;
+    /** The execution model of the project, inferred from the root flow function. */
+    modelType: 'workbook' | 'service';
     /** Diagnostics emitted during parsing. */
     errors: ParseDiagnostic[];
 }
@@ -676,15 +679,25 @@ const projectAST: ProjectAST = {
             ],
         },
     ],
-    entryPoint: 'main',
+    rootFlowId: 'main',
+    modelType: 'workbook',
     errors: [],
 };
 ```
 
-## Flow Graph Derivation
+## Root Flow Detection Algorithm
 
-> **Moved to [04-FLOW-MODELING.md](04-FLOW-MODELING.md).** The flow graph derivation rules, node component specifications,
-> and persistence model are now defined in the Flow Modeling architecture document.
+During AST construction, the parser determines the `rootFlowId` and `modelType` using the following algorithm:
+
+1. **Find all flow nodes:** Locate all declarations tagged with `@nodeType flow`.
+2. **Determine Root:**
+   - If a flow node is named `main`, it is designated as the root flow (`rootFlowId = 'main'`). All other flow nodes are treated as nested sub-flows.
+   - If there is no `main` function, but exactly *one* flow node exists, that single node is designated as the root flow.
+   - If there are no flow nodes at all, but a `main` function exists (even without the `@nodeType flow` tag), `main` is designated as the root flow.
+   - If there is no `main` function and *multiple* flow nodes exist, the parser throws an error (ambiguous entry point).
+3. **Determine Model Type:**
+   - If the root flow function has **no arguments**, `modelType` is set to `'workbook'`. This indicates a script that can be immediately executed (e.g., just paints graphs or runs a static pipeline).
+   - If the root flow function **has arguments**, `modelType` is set to `'service'`. This indicates a decision service that requires external input values to execute (e.g., via the Testing Service).
 
 ## Parser Components Architecture
 
