@@ -63,7 +63,7 @@ sequenceDiagram
     AST -->> User: AST Signatures + Executable JS
     Note over User, LLM: Phase 2 — Sandboxed Execution
     User ->> QJS: Init sandbox & Inject Executable JS
-    User ->> QJS: Register host hooks & __ENV__
+    User ->> QJS: Register host hooks
     User ->> QJS: Pass inputs (mapped via signatures)
     QJS ->> QJS: Invoke target function
     QJS ->> SPA: ai() call — VM suspends
@@ -90,7 +90,7 @@ sequenceDiagram
 5. **Init sandbox & Inject Executable JS** — A fresh QuickJS runtime instance is created: isolated heap, own global
    scope, no access to
    browser DOM or fetch. The transpiled JavaScript is loaded into the VM.
-6. **Register host hooks & __ENV__** — The host injects bridge functions like `ai(prompt)` and a frozen `__ENV__` object (containing environment variables) into the sandbox global scope before the script runs. Business logic can call them like any normal async function or global variable.
+6. **Register host hooks** — The host injects bridge functions like `ai(prompt)` into the sandbox global scope before the script runs. Business logic can call them like any normal async function or global variable.
 7. **Pass inputs** — The host uses the previously extracted AST signatures to correctly map UI state variables and inject them as parameters into the Guest execution context.
 8. **Invoke target function** — QuickJS evaluates the script and explicitly invokes the target function (the root flow or service method) by name, passing the mapped inputs.
 9. **ai() call — VM suspends** — When business logic hits `await ai("...")`, the VM yields control back to the SPA
@@ -177,7 +177,7 @@ the "Dynamic State" from the hash.
 | **Tests Summary**        | `/#tests/:projectId`              | Listing of all node tests and results.                       |
 | **Test Editor**          | `/#tests/:projectId/:key`         | Detailed test case management for given function or context. |
 | **App Preview**          | `/#app/:projectId`                | Interactive "Workbook" GUI.                                  |
-| **Deployment**           | `/#deploy/:projectId`             | Decision Service config & targets.                           |
+| **Deployment**           | `/#deploy/:projectId`             | Decision Service config & targets (OUT OF SCOPE FOR MVP).    |
 | **Health**               | `/#health/`                       | Health check endpoint.                                       |
 
 #### Route Parameters
@@ -759,12 +759,13 @@ Services may only depend **downward and sideways within the lib/ layer**, never 
 | Flow (4)       | AST (3) for ProjectAST types            |
 | Engine (5)     | AST (3) for transpilation               |
 | Testing (6)    | Engine (5) for execution                |
-| Deployment (7) | Storage, Engine (5) for env injection   |
 
 ## MVP Scope
 
 Given the ambition of the project, the MVP must lay a strong architectural foundation while deferring integrations
-that can be plugged in later without refactoring. The following priorities apply:
+that can be plugged in later without refactoring. Open Modeler will act purely as a stand-alone IDE for the MVP.
+
+> 🚫 **Service 7 (Deployment) is entirely OUT OF SCOPE for MVP.** The application acts purely as a stand-alone IDE. Environment variables and deployment targets will be evaluated post-MVP.
 
 ### MVP (Build Now)
 
@@ -786,7 +787,6 @@ that can be plugged in later without refactoring. The following priorities apply
 | Flow (4)       | FlowGraphSync (mutations → AST). Layout engine.           |
 | Engine (5)     | Bidirectional hooks (ai, fetch). Security layer.          |
 | Testing (6)    | Test case CRUD. Simple assertion runner.                  |
-| Deployment (7) | Environment variables only. No actual deployment targets. |
 
 ### Future (Not Started)
 

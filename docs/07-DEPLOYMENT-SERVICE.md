@@ -1,4 +1,7 @@
-# Service 7: Deployment Service — Architecture
+# Service 7: Deployment Service — Architecture (OUT OF SCOPE)
+
+> 🚫 **OUT OF SCOPE FOR MVP**
+> The Open Modeler acts purely as a stand-alone IDE for the MVP release. This service, including environment variable management and deployment targeting, has been deferred. This document remains as a structural placeholder for future implementation.
 
 > **Service:** Deployment Service (Service 7)
 > **Testing:** Jest (`lib/deployment/`) | Cypress (`views/deploy-manager/`)
