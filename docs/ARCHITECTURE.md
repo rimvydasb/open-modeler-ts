@@ -27,7 +27,7 @@ Project is in design phase.
 
 ## Master Business Case
 
-1. User can edit and save business logic scripts edited in a code editor (e.g. CodeMirror) within the React Flow
+1. User can edit and save business logic scripts edited in a code editor (e.g. ACE Editor) within the React Flow
    low-code environment. Example of the script: [examples/example-loan-return.ts](examples/example-loan-return.ts)
 2. Script is the project. Multiple projects can be stored in IndexedDB and listed in the landing page.
 3. The script is parsed to the higher level OpenModel Project AST (using ts-morph) to generate the graph in the React
@@ -41,6 +41,7 @@ Project is in design phase.
 - **ts-morph** — TypeScript AST analysis for signature extraction and transpilation.
 - **TanStack Query** — Imperative LLM request management, caching, and retries.
 - **IndexedDB** — Local storage for business logic scripts.
+- **ACE Editor** — High-performance code editor (`react-ace`) for script editing.
 - **Next.js & React** — Core SPA framework for the host environment.
 - **TypeScript** — Primary development language for host and logic.
 

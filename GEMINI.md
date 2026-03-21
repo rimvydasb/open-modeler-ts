@@ -45,7 +45,7 @@ The project architecture has been formally refined into a **7-Service Service-Or
 -   **Styling**: Material UI v7 (@mui/material)
 -   **Flow Modeling**: ReactFlow v11
 -   **Charts**: MUI X Charts v8
--   **Code Editor**: CodeMirror v6
+-   **Code Editor**: ACE Editor (react-ace)
 -   **Database (Client)**: IndexedDB (via `idb`) with normalized metadata/asset stores.
 -   **Testing**: Cypress v15.12.0 (E2E), Jest v30.2.0 (Unit)
 

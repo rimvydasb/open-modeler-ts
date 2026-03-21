@@ -112,7 +112,7 @@ The flow editor renders a fixed set of node types. Each node type has a correspo
 - **Display:** Parameters become input ports on the left side, return type becomes the output port on the right side.
   Each port shows the parameter name and type (e.g. `loanAmount: number`). The node header shows the `displayName`
   or function name.
-- **Edit:** Opens the Code Editor view (`views/code-editor/`) with CodeMirror for the function body. Parameters and
+- **Edit:** Opens the Code Editor view (`views/code-editor/`) with ACE Editor (react-ace) for the function body. Parameters and
   return type are edited via a form UI. Changes are parsed back to update the AST.
 
 ### `<ChartNode>` — `chart`

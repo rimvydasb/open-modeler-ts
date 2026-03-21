@@ -45,6 +45,6 @@ The static files will be generated in the `dist/` directory, which can be upload
 - **UI:** Material UI (MUI)
 - **State Management:** React Query (TanStack Query)
 - **Node Graph:** ReactFlow
-- **Code Editor:** CodeMirror / Ace
+- **Code Editor:** ACE Editor (react-ace)
 - **Testing:** Jest, Cypress
 - **Styling:** Vanilla CSS (per instructions) / MUI Emotion

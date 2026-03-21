@@ -407,7 +407,7 @@ Full-featured code editor with TypeScript support.
     </ViewToolbar>
 
     <EditorContent flex="1">
-        <CodeMirror language="typescript" theme="dark" value="{sourceCode}"/>
+        <AceEditor language="typescript" theme="monokai" value="{sourceCode}"/>
     </EditorContent>
 </CodeEditorView>
 ```
