@@ -63,9 +63,9 @@ sequenceDiagram
     AST -->> User: AST Signatures + Executable JS
     Note over User, LLM: Phase 2 — Sandboxed Execution
     User ->> QJS: Init sandbox & Inject Executable JS
-    User ->> QJS: Register host hooks (e.g. ai)
+    User ->> QJS: Register host hooks & __ENV__
     User ->> QJS: Pass inputs (mapped via signatures)
-    QJS ->> QJS: Run script
+    QJS ->> QJS: Invoke target function
     QJS ->> SPA: ai() call — VM suspends
     SPA ->> TSQ: fetchQuery()
     TSQ ->> LLM: HTTP request
@@ -90,12 +90,9 @@ sequenceDiagram
 5. **Init sandbox & Inject Executable JS** — A fresh QuickJS runtime instance is created: isolated heap, own global
    scope, no access to
    browser DOM or fetch. The transpiled JavaScript is loaded into the VM.
-6. **Register host hooks** — The host injects bridge functions like `ai(prompt)` into the sandbox global scope before
-   the script runs. Business
-   logic can call it like any normal async function.
-7. **Pass inputs** — The host uses the previously extracted AST signatures to correctly map UI state variables and
-   inject them as parameters into the Guest execution context.
-8. **Run script** — QuickJS executes the logic inside the sandbox.
+6. **Register host hooks & __ENV__** — The host injects bridge functions like `ai(prompt)` and a frozen `__ENV__` object (containing environment variables) into the sandbox global scope before the script runs. Business logic can call them like any normal async function or global variable.
+7. **Pass inputs** — The host uses the previously extracted AST signatures to correctly map UI state variables and inject them as parameters into the Guest execution context.
+8. **Invoke target function** — QuickJS evaluates the script and explicitly invokes the target function (the root flow or service method) by name, passing the mapped inputs.
 9. **ai() call — VM suspends** — When business logic hits `await ai("...")`, the VM yields control back to the SPA
    host and waits for the Promise to resolve.
 10. **fetchQuery()** — Host calls `queryClient.fetchQuery()` imperatively to trigger the LLM HTTP call via TanStack

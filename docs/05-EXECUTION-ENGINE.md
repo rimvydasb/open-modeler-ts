@@ -100,8 +100,10 @@ sequenceDiagram
     Eng ->> Bridge: bind chart(), table(), log(), ai(), fetch()
     Bridge ->> QJS: inject host functions into global scope
 
-    Hook ->> Eng: execute(sandbox, js, inputs)
-    Eng ->> QJS: evaluate script + call function(inputs)
+    Hook ->> Eng: execute(sandbox, functionName, js, inputs, envVars)
+    Eng ->> QJS: inject __ENV__ global object
+    Eng ->> QJS: evaluate script (load declarations)
+    Eng ->> QJS: invoke functionName(inputs)
     activate QJS
 
     Note over QJS, TSQ: Script may call hooks during execution
@@ -134,7 +136,7 @@ sequenceDiagram
 interface EngineInterface {
     createSandbox(): Promise<SandboxHandle>;
     registerHooks(sandbox: SandboxHandle, callbacks: HookCallbacks): void;
-    execute(sandbox: SandboxHandle, js: string, inputs: Record<string, unknown>, assets?: ProjectAsset[]): Promise<ExecutionResult>;
+    execute(sandbox: SandboxHandle, functionName: string, js: string, inputs: Record<string, unknown>, envVars?: Record<string, string>, assets?: ProjectAsset[]): Promise<ExecutionResult>;
     dispose(sandbox: SandboxHandle): void;
 }
 
@@ -149,6 +151,7 @@ interface ExecutionContext {
     projectId: string;
     functionName: string;
     inputs: Record<string, unknown>;
+    envVars: Record<string, string>;   // Environment variables to inject as __ENV__
     timeout: number;                   // Max execution time in ms
     allowedDomains: string[];          // For fetch() domain allowlist
 }
@@ -204,7 +207,7 @@ It is also designed to resolve local `./` imports from the `ProjectAsset[]` arra
 ### QuickJS Sandbox (`engines/quickjs/quickjs-sandbox.ts`)
 
 Creates the isolated sandbox context with security boundaries. Configures memory limits, disables dangerous APIs
-(`eval`, `Function`), and sets up the host function injection points.
+(`eval`, `Function`), and sets up the host function injection points. During execution setup, it also injects a frozen `__ENV__` global object so scripts can securely access environment variables without exposing the host's actual `process.env`.
 
 **Test strategy (Jest):** Verify sandbox prevents access to host globals. Test memory limit enforcement.
 
