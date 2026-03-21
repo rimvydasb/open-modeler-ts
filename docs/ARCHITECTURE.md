@@ -155,3 +155,28 @@ open-modeler-ts/            # GitHub repository root
     ├── utils/              # Shared helper functions and formatters
     └── types/              # Global TypeScript interfaces and types
 ```
+
+# Services Decomposition
+
+Each service will have backend and frontend components. Backend is tested by Jest and frontend is tested by Cypress.
+The services are:
+
+1. Projects Management - projects CRUD operations in IndexedDB with a possibility to be extended (or replaced) by Git or
+   file storage. Service defines Project BOM (type interfaces) and project management logic (create, read, update,
+   delete).
+2. Project Management - single project operations and project asset management. Project assets are files (e.g. JSON,
+   CSV) that can be imported together with a source. TypeScript files, that can be parsed (or not) to AST, are also one
+   of project assets.
+    - Project Metadata Management - project name, description, tags, created/updated timestamps, etc.
+    - Types Management - parser will extract types (for now interfaces) and provide special UI to edit them. Types are
+      stored as part of the project and can be used in the source code. By default `types.ts` asset will be created.
+    - Assets Management - not only TypeScript files, but also JSON, CSV, XML files can be stored as project assets, but
+      also reusable utilities (simple functions for reusability) and services (external servies integrations).
+3. AST Parsing - ts-morph based service to parse TypeScript code into an AST and extract function signatures and
+   metadata. Should maintain a possibility to be extended by other parsers (e.g. Python's, JavaScript, other) if needed
+   in the future.
+4. Execution Engine - QuickJS integration for running business logic scripts in a secure sandbox. In the future, there
+   could be Pyodide or other engines.
+5. Testing Service - manages test cases creation, execution, and reporting.
+6. Deployment Service - manages application deployment to different environments (e.g. Vercel, AWS Lambda, etc.) and
+   environment variables management.
