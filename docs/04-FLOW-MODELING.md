@@ -1,8 +1,9 @@
-# Flow Modeling — Architecture
+# Service 4: Flow Modeling — Architecture
 
 > **Service:** Flow Modeling (Service 4)
 > **Testing:** `lib/flow/` — Jest | `components/nodes/`, `components/views/flow-editor/` — Cypress
 > **Depends on:** AST Parsing (Service 3) for `ProjectAST` data structures
+> **Consumed by:** UI Layer (Flow Editor View)
 > **Defined types:** `FlowGraph`, `FlowNode`, `FlowEdge`, `FlowMutation`
 
 ## Overview
@@ -20,6 +21,75 @@ This service has two distinct layers with fundamentally different testing strate
 
 The `lib/flow/` layer is **strictly React-free** — it operates on plain TypeScript data structures and can be tested
 in isolation with Jest. The React layer depends on `lib/flow/` but never the reverse.
+
+## Structural Diagram
+
+```mermaid
+classDiagram
+    direction TB
+
+    class FlowGraph {
+        +FlowNode[] nodes
+        +FlowEdge[] edges
+    }
+
+    class FlowNode {
+        +string id
+        +NodeType type
+        +Position position
+        +FlowNodeData data
+    }
+
+    class FlowNodeData {
+        +Declaration declaration
+        +string displayName
+    }
+
+    class FlowEdge {
+        +string id
+        +string source
+        +string target
+        +string? sourceHandle
+        +string? targetHandle
+    }
+
+    class FlowMutation {
+        <<union>>
+        move-node
+        add-edge
+        remove-edge
+        update-parameter
+        add-node
+        remove-node
+        rename-node
+    }
+
+    class FlowGraphBuilder {
+        +buildFlowGraph(ast: ProjectAST) FlowGraph
+    }
+
+    class FlowGraphSync {
+        +applyFlowMutations(ast, mutations) ProjectAST
+    }
+
+    class FlowLayoutEngine {
+        +layoutFlowGraph(graph) FlowGraph
+    }
+
+    class ProjectAST {
+        <<from Service 3>>
+    }
+
+    FlowGraph *-- "0..*" FlowNode
+    FlowGraph *-- "0..*" FlowEdge
+    FlowNode *-- FlowNodeData
+
+    FlowGraphBuilder ..> ProjectAST : reads
+    FlowGraphBuilder ..> FlowGraph : produces
+    FlowGraphSync ..> ProjectAST : reads + writes
+    FlowGraphSync ..> FlowMutation : consumes
+    FlowLayoutEngine ..> FlowGraph : repositions nodes
+```
 
 ## Flow Graph Derivation
 
@@ -69,14 +139,16 @@ The flow editor renders a fixed set of node types. Each node type has a correspo
   number of rows with a "show more" affordance.
 - **Edit:** TBD — may support column visibility and sort configuration.
 
-### Flow Node — `flow` (no dedicated component)
+### `<SubFlowNode>` and Root Flow — `flow`
 
-- **Component:** None — the root `main()` function defines the ReactFlow canvas itself.
+- **Component (Sub-Flow):** `components/nodes/subflow-node/subflow-node.tsx`
 - **Node Type:** `flow`
-- **Display:** The root `main()` function tagged `@nodeType flow` is **not** rendered as a visible node — it defines
-  the canvas itself (the ReactFlow graph). If other functions are tagged `@nodeType flow`, they are treated as
-  sub-graphs and rendered as `<FunctionNode>`.
-- **Edit:** The flow editor view (`views/flow-editor/`) itself — users interact with the canvas directly.
+- **Display:** 
+  - **Root Flow:** If a function (e.g., `main()`) is tagged with `@nodeType flow` and acts as the entry point, it is **not** rendered as a visible node. Instead, it defines the root ReactFlow canvas itself.
+  - **Sub-Flow Node:** If other functions are tagged with `@nodeType flow` (i.e., they are not the root entry point), they are rendered as a `<SubFlowNode>`.
+- **Edit:** 
+  - **Root Flow:** Users interact with the ReactFlow canvas directly in the flow editor view (`views/flow-editor/`).
+  - **Sub-Flow Node:** Interacting with a `<SubFlowNode>` will navigate into and open another ReactFlow canvas specifically for that sub-graph.
 
 ### `<ListNode>` — `list`
 

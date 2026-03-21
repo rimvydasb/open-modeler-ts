@@ -1,9 +1,10 @@
-# AST Parsing — Architecture
+# Service 3: AST Parsing — Architecture
 
 > **Service:** AST Parsing (Service 3)
 > **Testing:** Jest only — this service is strictly React-free
 > **Depends on:** Nothing (pure logic, no service dependencies)
 > **Consumed by:** Project Management (2), Flow Modeling (4), Execution Engine (5)
+> **Defined types:** `ProjectAST`, `Declaration`, `TypeReference`, `ParameterInfo`, `CallExpression`, `NodeType`
 
 ## Overview
 
@@ -227,7 +228,7 @@ The `@nodeType` JSDoc tag maps script declarations to visual node types in the f
  * - function  — A computation step rendered as a standard node.
  * - chart     — A visualization node that renders MUI X Charts output.
  * - table     — A visualization node that renders tabular output.
- * - flow      — The entry-point orchestrator (typically `main()`).
+ * - flow      — A flow graph. If it is the root entry point, it defines the main canvas. Otherwise, it renders as a `<SubFlowNode>` containing its own nested graph.
  * - list      — A data-shape node representing a collection type (e.g. an interface used as a list item).
  */
 type NodeType = 'function' | 'chart' | 'table' | 'flow' | 'list';

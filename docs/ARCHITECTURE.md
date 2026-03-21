@@ -14,12 +14,17 @@ Project is in design phase.
 
 ### Current Design Documents
 
-| Document                                         | Service               | Status |
-|--------------------------------------------------|-----------------------|--------|
-| [ARCHITECTURE.md](ARCHITECTURE.md)               | All — master overview | Active |
-| [03-AST-PARSING.md](03-AST-PARSING.md)                       | AST Parsing (3)       | Active |
-| [04-FLOW-MODELING.md](04-FLOW-MODELING.md)                     | Flow Modeling (4)     | Active |
-| [examples/example-loan-return.ts](examples/example-loan-return.ts) | Reference example     | —      |
+| Document                                                       | Service                    | Status |
+|----------------------------------------------------------------|----------------------------|--------|
+| [ARCHITECTURE.md](ARCHITECTURE.md)                             | All — master overview      | Active |
+| [01-PROJECTS-SERVICE.md](01-PROJECTS-SERVICE.md)               | Projects Management (1)    | Active |
+| [02-PROJECT-SERVICE.md](02-PROJECT-SERVICE.md)                 | Project Management (2)     | Active |
+| [03-AST-PARSING.md](03-AST-PARSING.md)                        | AST Parsing (3)            | Active |
+| [04-FLOW-MODELING.md](04-FLOW-MODELING.md)                     | Flow Modeling (4)          | Active |
+| [05-EXECUTION-ENGINE.md](05-EXECUTION-ENGINE.md)               | Execution Engine (5)       | Active |
+| [06-TESTING-SERVICE.md](06-TESTING-SERVICE.md)                 | Testing Service (6)        | Active |
+| [07-DEPLOYMENT-SERVICE.md](07-DEPLOYMENT-SERVICE.md)           | Deployment Service (7)     | Active |
+| [examples/example-loan-return.ts](examples/example-loan-return.ts) | Reference example      | —      |
 
 ## Master Business Case
 
@@ -512,31 +517,12 @@ graph TD
 
 ### Service 1 — Projects Management (`lib/projects/`)
 
+> **Architecture document:** [01-PROJECTS-SERVICE.md](01-PROJECTS-SERVICE.md) — structural diagram, CRUD behavioral
+> flow, StoredProject/ProjectListItem interfaces.
+
 **Responsibility:** Multi-project CRUD operations. Defines the project BOM (Bill of Materials) — the canonical type
 interfaces that describe what a stored project looks like. This is the "library" that the workspace view uses to list,
 create, duplicate, and delete projects.
-
-**Key interfaces:**
-
-```typescript
-interface StoredProject {
-    id: string;                    // UUID
-    name: string;                  // User-defined project name
-    description?: string;
-    tags: Record<string, string>;
-    assets: ProjectAsset[];        // All project files (source, types, data)
-    createdAt: string;             // ISO 8601
-    updatedAt: string;             // ISO 8601
-}
-
-interface ProjectListItem {
-    id: string;
-    name: string;
-    description?: string;
-    updatedAt: string;
-    assetCount: number;
-}
-```
 
 **Storage extensibility:** `projects-repository.ts` depends on `storage-interface.ts`, not on IndexedDB directly. To
 swap to Git or file-based storage in the future, implement a new adapter — no changes to the service layer.
@@ -547,6 +533,9 @@ swap to Git or file-based storage in the future, implement a new adapter — no 
 
 ### Service 2 — Project Management (`lib/project/`)
 
+> **Architecture document:** [02-PROJECT-SERVICE.md](02-PROJECT-SERVICE.md) — sub-service structural diagram, asset
+> import behavioral flow, ProjectAsset/AssetKind/ManagedType interfaces.
+
 **Responsibility:** Operations on a single open project. Manages the three sub-domains: metadata, types, and assets.
 This service is the "work surface" that the project layout views interact with.
 
@@ -555,23 +544,8 @@ This service is the "work surface" that the project layout views interact with.
 - **Metadata** (`metadata/`) — project name, description, tags, timestamps. Simple CRUD.
 - **Types Management** (`types-management/`) — extracts TypeScript interfaces from source files (delegates to
   Service 3's parser), provides UI-editable representations, manages the default `types.ts` asset.
-- **Assets** (`assets/`) — project file management. Each asset has a `kind` discriminator:
-
-```typescript
-type AssetKind = 'source' | 'types' | 'json' | 'csv' | 'utility' | 'service';
-
-interface ProjectAsset {
-    id: string;
-    filename: string;
-    kind: AssetKind;
-    content: string;               // File contents (text-based)
-    createdAt: string;
-    updatedAt: string;
-}
-```
-
-**Importer pattern:** Each file format has a dedicated importer implementing `ImporterInterface`. This keeps format-
-specific parsing isolated and testable.
+- **Assets** (`assets/`) — project file management with format-specific importers. See
+  [02-PROJECT-SERVICE.md](02-PROJECT-SERVICE.md) for `ProjectAsset`, `AssetKind`, and importer interfaces.
 
 **Frontend:** `views/code-editor/`, `views/types-editor/`, `views/assets-browser/`.
 
@@ -623,21 +597,14 @@ node type definitions, component paths, and the bidirectional synchronization fl
 
 ### Service 5 — Execution Engine (`lib/engine/`)
 
+> **Architecture document:** [05-EXECUTION-ENGINE.md](05-EXECUTION-ENGINE.md) — Host/Guest structural diagram,
+> execution lifecycle sequence, EngineInterface/HookCallbacks/ExecutionResult interfaces.
+
 **Responsibility:** Secure script execution in a sandboxed VM. Manages the full lifecycle: sandbox creation → hook
 registration → script execution → result collection → sandbox disposal.
 
 **Engine extensibility:** `engine-interface.ts` defines the abstract contract. The `quickjs/` directory implements it.
 Future engines (Pyodide for Python, Deno for enhanced JS) implement the same interface.
-
-**Hooks architecture (from `03-AST-PARSING.md`):**
-
-| Hook      | Category      | Direction     | Host Action                    |
-|-----------|---------------|---------------|--------------------------------|
-| `chart()` | Push          | Script → Host | Update React state → re-render |
-| `table()` | Push          | Script → Host | Update React state → re-render |
-| `log()`   | Push          | Script → Host | Append to console buffer       |
-| `ai()`    | Bidirectional | Script ↔ Host | TanStack Query → LLM HTTP      |
-| `fetch()` | Bidirectional | Script ↔ Host | TanStack Query → HTTP API      |
 
 **Security layer:** Domain allowlists, payload size limits, execution timeouts — all configurable per project.
 
@@ -647,35 +614,20 @@ Future engines (Pyodide for Python, Deno for enhanced JS) implement the same int
 
 ### Service 6 — Testing Service (`lib/testing/`)
 
+> **Architecture document:** [06-TESTING-SERVICE.md](06-TESTING-SERVICE.md) — TestCase/TestSuite structural diagram,
+> test execution behavioral flow, TestAssertion type definition.
+
 **Responsibility:** Test case lifecycle management. Users define test cases with input data and expected outputs.
 The runner executes them through the Execution Engine (Service 5) and reports results.
-
-**Key types:**
-
-```typescript
-interface TestCase {
-    id: string;
-    name: string;
-    description?: string;
-    inputs: Record<string, unknown>;   // Function parameters
-    expectedOutput: unknown;           // Expected return value
-    assertions: TestAssertion[];       // Custom assertions (deep equality, contains, etc.)
-}
-
-interface TestResult {
-    testCaseId: string;
-    status: 'passed' | 'failed' | 'error';
-    actualOutput: unknown;
-    duration: number;                  // Execution time in ms
-    errorMessage?: string;
-}
-```
 
 **Frontend:** `views/tests-manager/` — test case editor, execution controls, results panel.
 
 ---
 
 ### Service 7 — Deployment Service (`lib/deployment/`)
+
+> **Architecture document:** [07-DEPLOYMENT-SERVICE.md](07-DEPLOYMENT-SERVICE.md) — DeploymentTarget/EnvironmentConfig
+> structural diagram, deployment behavioral flow, environment variable interfaces.
 
 **Responsibility:** Manages deployment targets and environment variables. This service is mostly a **skeleton for MVP**
 — the interfaces and types are defined, but actual deployment integrations (Vercel, AWS Lambda) are deferred.
