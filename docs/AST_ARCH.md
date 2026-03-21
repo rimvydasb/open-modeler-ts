@@ -1,17 +1,26 @@
-# OpenModel Project AST
+# AST Parsing — Architecture
+
+> **Service:** AST Parsing (Service 3)
+> **Testing:** Jest only — this service is strictly React-free
+> **Depends on:** Nothing (pure logic, no service dependencies)
+> **Consumed by:** Project Management (2), Flow Modeling (4), Execution Engine (5)
 
 ## Overview
 
-The OpenModel Project AST defines the intermediate representation used to bridge the TypeScript source code (edited in
-CodeMirror) and the visual flow graph (rendered in ReactFlow). The AST is produced by **ts-morph** during the Analysis
-Phase and serves as the single source of truth for:
+The AST Parsing service defines the intermediate representation (`ProjectAST`) used to bridge TypeScript source code
+and all downstream consumers. The AST is produced by **ts-morph** during the Analysis Phase and serves as the single
+source of truth for:
 
-- Rendering the flow graph (nodes and edges)
-- Serializing flow graph changes back to TypeScript source
-- Extracting function signatures for QuickJS sandbox execution
-- Persisting project state in IndexedDB
+- Extracting function signatures, types, and metadata from TypeScript source
+- Serializing AST changes back to TypeScript source (round-trip editing)
+- Transpiling TypeScript to QuickJS-ready JavaScript for execution
+- Providing type information to the Flow Modeling service (see [FLOW_ARCH.md](FLOW_ARCH.md))
 
-This document specifies all TypeScript interfaces that compose the Project AST.
+This document specifies all TypeScript interfaces that compose the Project AST, the parsing pipeline components,
+and the hooks type system.
+
+> **Flow graph derivation, node components, and visual editing are defined in [FLOW_ARCH.md](FLOW_ARCH.md).**
+> **Persistence model (StoredProject) is defined in [ARCHITECTURE.md](ARCHITECTURE.md) under Service 1.**
 
 ## Runtime Architecture
 
@@ -671,68 +680,8 @@ const projectAST: ProjectAST = {
 
 ## Flow Graph Derivation
 
-The flow graph is derived from the Project AST using these rules:
-
-1. **Nodes** — Each `Declaration` with a `nodeType` becomes a ReactFlow node. The `id`, `displayName` (or `name`),
-   and `nodeType` map directly to the node's visual representation.
-
-2. **Edges** — Edges are derived from `FunctionDeclaration.callExpressions`. For each call expression in a function
-   body, an edge is created from the called function's node to the calling function's node (data flows from callee
-   output to caller input).
-
-3. **Ports** — Input ports are derived from `ParameterInfo[]` and output ports from `returnType`. Port type labels
-   come from `TypeReference.name`.
-
-4. **Constants as Input Nodes** — A `ConstantDeclaration` that is destructured in the entry-point function becomes an
-   input node with output ports matching its properties.
-
-## Persistence Model
-
-The Project AST is **not persisted directly**. The TypeScript source string is the canonical stored form. The AST is
-re-derived on load via ts-morph parsing. IndexedDB stores:
-
-```typescript
-interface StoredProject {
-    /** UUID for the project. */
-    id: string;
-    /** User-defined project name. */
-    name: string;
-    /** Full TypeScript source code — the single source of truth. */
-    source: string;
-    createdAt: string;
-    updatedAt: string;
-}
-```
-
-## Nodes
-
-- **Node Type:** function, chart, table, flow, list
-- **Node Display:** how node is displayed in ReactFlow
-- **Node Edit:** how node is edited
-
-### Function Node
-
-- **Node Type:** function
-- **Node Display:** Parameters become input ports, and the return type becomes the output port. Rendered as a ReactFlow
-  node. Input ports are always on the left side, and output ports on the right side. In the same line as a port, the
-  parameter name and type are displayed (e.g. `loanAmount: number`).
-- **Node Edit:** (`code-editor`) separate edit page is opened with CodeMirror for the function body. Parameters and
-  return type are edited via a form UI. Changes to the body are parsed back to update the AST and re-derive the graph.
-
-### Chart Node
-
-- **Node Type:** chart
-- **Node Display:** based on the data either a line/bar chart or a pie chart is rendered in the ReactFlow node. MUI X
-  Charts are used for rendering.
-- **Node Edit:** none, TBC (maybe change chart type via dropdown in the node)
-
-### Flow Node
-
-- **Node Type:** flow
-- **Node Display:** the very root node is not displayed as a node, because this is ReactFlow's definition. If other
-  functions are tagged as `@nodeType flow`, they will be treated as a sub-graph and will be rendered as `Function Node`.
-  Root node must be called `main()` and will be the entry point for execution.
-- **Node Edit:** (`flow-editor`) ReactFlow page
+> **Moved to [FLOW_ARCH.md](FLOW_ARCH.md).** The flow graph derivation rules, node component specifications,
+> and persistence model are now defined in the Flow Modeling architecture document.
 
 ## Parser Components Architecture
 
@@ -752,7 +701,6 @@ graph LR
         CGA["CallGraphAnalyzer"]
         SP["SourceParser"]
         AST_OUT["ProjectAST"]
-
         SRC --> SP
         SP --> JDP
         SP --> TR
@@ -765,20 +713,8 @@ graph LR
         AST_IN["ProjectAST"]
         ASTSER["AstSerializer"]
         SRC_OUT["TypeScript Source<br/>(string)"]
-
         AST_IN --> ASTSER
         ASTSER --> SRC_OUT
-    end
-
-    subgraph FlowPipeline["Flow Pipeline (AST ↔ ReactFlow)"]
-        direction TB
-        AST_FLOW["ProjectAST"]
-        FGB["FlowGraphBuilder"]
-        FGS["FlowGraphSync"]
-        FLOW["ReactFlow<br/>Nodes & Edges"]
-
-        AST_FLOW --> FGB --> FLOW
-        FLOW --> FGS --> AST_FLOW
     end
 
     subgraph TranspilationPipeline["Transpilation Pipeline (Source → Executable JS)"]
@@ -787,19 +723,22 @@ graph LR
         TRANS["Transpiler"]
         HOOK_RW["HookRewriter"]
         JS_OUT["JavaScript<br/>(QuickJS-ready)"]
-
         TS_IN --> TRANS --> HOOK_RW --> JS_OUT
     end
 
-    style ParsingPipeline fill:#e3f2fd,stroke:#1565c0
-    style SerializationPipeline fill:#fff3e0,stroke:#e65100
-    style FlowPipeline fill:#e8f5e9,stroke:#2e7d32
-    style TranspilationPipeline fill:#fce4ec,stroke:#c62828
+    style ParsingPipeline fill: #e3f2fd, stroke: #1565c0
+    style SerializationPipeline fill: #fff3e0, stroke: #e65100
+    style TranspilationPipeline fill: #fce4ec, stroke: #c62828
 ```
+
+> **Note:** The Flow Pipeline (AST ↔ ReactFlow) has been moved to Service 4 — see [FLOW_ARCH.md](FLOW_ARCH.md).
 
 ### Component Specifications
 
 Each component is a pure function or a stateless class. All live in `src/lib/ast/`.
+
+> **FlowGraphBuilder and FlowGraphSync** have been moved to `src/lib/flow/` (Service 4).
+> See [FLOW_ARCH.md](FLOW_ARCH.md) for their specifications.
 
 #### SourceParser
 
@@ -888,49 +827,6 @@ function serializeAst(ast: ProjectAST): string;
 equivalence. Also test incremental mutations (add a parameter, remove a function) and verify the output is valid
 TypeScript.
 
-#### FlowGraphBuilder
-
-Converts the AST into ReactFlow-compatible node and edge arrays.
-
-```typescript
-interface FlowGraph {
-    nodes: FlowNode[];
-    edges: FlowEdge[];
-}
-
-/**
- * Builds a ReactFlow graph from a ProjectAST.
- * Only includes declarations where visible === true.
- * Derives edges from CallExpression relationships.
- */
-function buildFlowGraph(ast: ProjectAST): FlowGraph;
-```
-
-**Test strategy:** Provide known `ProjectAST` structures, assert the correct nodes are created (visible only),
-correct edges are derived from call expressions, and positions are assigned.
-
-#### FlowGraphSync
-
-Applies flow editor mutations (node moves, edge additions/removals, parameter edits) back to the `ProjectAST`.
-
-```typescript
-type FlowMutation =
-    | { type: 'move-node'; nodeId: string; position: { x: number; y: number } }
-    | { type: 'add-edge'; sourceId: string; targetId: string }
-    | { type: 'remove-edge'; edgeId: string }
-    | { type: 'update-parameter'; functionId: string; paramIndex: number; update: Partial<ParameterInfo> }
-    | { type: 'rename-node'; nodeId: string; newName: string };
-
-/**
- * Applies a list of flow editor mutations to the ProjectAST.
- * Returns a new ProjectAST (immutable update).
- */
-function applyFlowMutations(ast: ProjectAST, mutations: FlowMutation[]): ProjectAST;
-```
-
-**Test strategy:** Apply mutations to known ASTs and assert the resulting AST reflects the change. Verify that
-serializing the mutated AST produces valid TypeScript.
-
 #### Transpiler
 
 Converts TypeScript source to JavaScript suitable for QuickJS execution.
@@ -1006,16 +902,15 @@ graph TB
     SCRIPT --> CHART --> REACT
     SCRIPT --> TABLE --> REACT
     SCRIPT --> LOG --> CONSOLE
-    SCRIPT -- "await" --> AI -- "suspend VM" --> TSQ2 --> LLM2
-    LLM2 --> TSQ2 --> AI -- "resume VM" --> SCRIPT
-    SCRIPT -- "await" --> FETCH -- "suspend VM" --> TSQ2 --> API
-    API --> TSQ2 --> FETCH -- "resume VM" --> SCRIPT
-
-    style ScriptEnvironment fill:#fff3e0,stroke:#e65100
-    style PushHooks fill:#e8f5e9,stroke:#2e7d32
-    style BidirectionalHooks fill:#e3f2fd,stroke:#1565c0
-    style HostEnvironment fill:#f3e5f5,stroke:#6a1b9a
-    style External fill:#fce4ec,stroke:#c62828
+    SCRIPT -- " await " --> AI -- " suspend VM " --> TSQ2 --> LLM2
+    LLM2 --> TSQ2 --> AI -- " resume VM " --> SCRIPT
+    SCRIPT -- " await " --> FETCH -- " suspend VM " --> TSQ2 --> API
+    API --> TSQ2 --> FETCH -- " resume VM " --> SCRIPT
+    style ScriptEnvironment fill: #fff3e0, stroke: #e65100
+    style PushHooks fill: #e8f5e9, stroke: #2e7d32
+    style BidirectionalHooks fill: #e3f2fd, stroke: #1565c0
+    style HostEnvironment fill: #f3e5f5, stroke: #6a1b9a
+    style External fill: #fce4ec, stroke: #c62828
 ```
 
 ### Hook Usage in Scripts
@@ -1024,7 +919,7 @@ Hooks are imported as a standard ES module. The import statement is recognized b
 `HookRewriter` during transpilation. In the user's TypeScript source, hooks look like ordinary typed function calls:
 
 ```typescript
-import { chart, table, log, ai } from '@openmodeler/hooks';
+import {chart, table, log, ai} from '@openmodeler/hooks';
 
 /**
  * @nodeType chart
@@ -1178,16 +1073,13 @@ sequenceDiagram
     participant React as React State
     participant TQ as TanStack Query
     participant LLM as LLM Endpoint
-
     Note over Script, Resolver: Module Loading
     Script ->> Resolver: import { chart, ai } from 'openmodeler:hooks'
     Resolver -->> Script: { chart: hostFn, ai: hostFn }
-
     Note over Script, React: Push Hook — chart()
     Script ->> Bridge: chart(data)
     Bridge ->> React: setState(chartData)
     React -->> React: Re-render App Preview
-
     Note over Script, LLM: Bidirectional Hook — ai()
     Script ->> Bridge: await ai(prompt)
     Bridge ->> Bridge: VM suspends

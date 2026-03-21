@@ -2,6 +2,25 @@
 
 Project is in design phase.
 
+## Documentation Structure
+
+- Entry document: [ARCHITECTURE.md](ARCHITECTURE.md) — master overview, service map, and project structure.
+- All design documents reside in the `docs/` folder with the following naming conventions:
+    - `*_ARCH.md` — Architecture documents defining the initial service, component, or feature architecture. Created
+      first during the design phase.
+    - `*_REQ.md` — High-level requirements used to design proper user stories. Added after architecture is stable.
+    - `*_STORY.md` — Implementation stories that guide development of specific features or components.
+    - `*_SPEC.md` — Completed stories appear as specifications that can be referenced by other stories or documents.
+
+### Current Design Documents
+
+| Document                                         | Service               | Status |
+|--------------------------------------------------|-----------------------|--------|
+| [ARCHITECTURE.md](ARCHITECTURE.md)               | All — master overview | Active |
+| [AST_ARCH.md](AST_ARCH.md)                       | AST Parsing (3)       | Active |
+| [FLOW_ARCH.md](FLOW_ARCH.md)                     | Flow Modeling (4)     | Active |
+| [example-loan-return.ts](example-loan-return.ts) | Reference example     | —      |
+
 ## Master Business Case
 
 1. User can edit and save business logic scripts edited in a code editor (e.g. CodeMirror) within the React Flow
@@ -136,8 +155,9 @@ build tooling overhead, which is the right trade-off for a browser-only SPA at t
 ```text
 open-modeler-ts/
 ├── docs/                                     # Architecture & design documents
-│   ├── ARCHITECTURE.md                       # This document
-│   ├── PROJECT_AST.md                        # AST specification & type definitions
+│   ├── ARCHITECTURE.md                       # This document — master overview
+│   ├── AST_ARCH.md                           # Service 3: AST parsing architecture
+│   ├── FLOW_ARCH.md                          # Service 4: Flow modeling architecture
 │   └── example-loan-return.ts                # Reference example script
 │
 ├── cypress/                                  # E2E tests (frontend, Cypress)
@@ -145,11 +165,11 @@ open-modeler-ts/
 │   │   ├── health.cy.ts                      # Critical: must pass before all others
 │   │   ├── workspace.cy.ts                   # Service 1 — project listing, create, delete
 │   │   ├── project-editor.cy.ts              # Service 2 — metadata, assets, types editing
-│   │   ├── flow-editor.cy.ts                 # Service 3 — flow graph interaction
+│   │   ├── flow-editor.cy.ts                 # Service 4 — flow graph interaction
 │   │   ├── code-editor.cy.ts                 # Service 3 — code editing round-trip
-│   │   ├── execution.cy.ts                   # Service 4 — script execution, hook output
-│   │   ├── test-manager.cy.ts                # Service 5 — test case management
-│   │   └── deployment.cy.ts                  # Service 6 — deployment configuration
+│   │   ├── execution.cy.ts                   # Service 5 — script execution, hook output
+│   │   ├── test-manager.cy.ts                # Service 6 — test case management
+│   │   └── deployment.cy.ts                  # Service 7 — deployment configuration
 │   ├── fixtures/                             # Test data (sample projects, scripts)
 │   └── support/                              # Cypress helpers, commands, IndexedDB cleanup
 │
@@ -180,7 +200,7 @@ open-modeler-ts/
 │   │   │   ├── landing-layout.tsx            # Multi-project management shell
 │   │   │   └── project-layout.tsx            # In-project navigation shell
 │   │   │
-│   │   ├── nodes/                            # Custom ReactFlow node components
+│   │   ├── nodes/                            # Custom ReactFlow node components (Service 4)
 │   │   │   ├── common/                       # Shared node chrome (ports, labels)
 │   │   │   │   └── node-wrapper.tsx
 │   │   │   ├── function-node/
@@ -197,7 +217,7 @@ open-modeler-ts/
 │   │       │   ├── workspace-view.tsx        # Main workspace grid
 │   │       │   ├── project-card.tsx          # Individual project card
 │   │       │   └── create-project-dialog.tsx # New project dialog
-│   │       ├── flow-editor/                  # → Service 3: ReactFlow editor
+│   │       ├── flow-editor/                  # → Service 4: ReactFlow editor
 │   │       │   ├── flow-editor-view.tsx      # Main flow canvas
 │   │       │   ├── flow-toolbar.tsx          # Flow-specific actions
 │   │       │   └── flow-sidebar.tsx          # Node palette / properties
@@ -211,16 +231,16 @@ open-modeler-ts/
 │   │       │   ├── assets-browser-view.tsx   # Asset listing with filters
 │   │       │   ├── asset-list.tsx            # Sortable asset table
 │   │       │   └── asset-import-dialog.tsx   # Import dialog (file upload, paste)
-│   │       ├── app-preview/                  # → Service 4: Execution output
+│   │       ├── app-preview/                  # → Service 5: Execution output
 │   │       │   ├── app-preview-view.tsx      # Preview container
 │   │       │   ├── chart-panel.tsx           # chart() hook output
 │   │       │   ├── table-panel.tsx           # table() hook output
 │   │       │   └── console-panel.tsx         # log() hook output
-│   │       ├── tests-manager/                # → Service 5: Test management
+│   │       ├── tests-manager/                # → Service 6: Test management
 │   │       │   ├── tests-manager-view.tsx    # Test suite listing
 │   │       │   ├── test-case-editor.tsx      # Individual test case form
 │   │       │   └── test-results-panel.tsx    # Execution results display
-│   │       ├── deploy-manager/               # → Service 6: Deployment
+│   │       ├── deploy-manager/               # → Service 7: Deployment
 │   │       │   ├── deploy-manager-view.tsx   # Deployment targets listing
 │   │       │   ├── target-config.tsx         # Target configuration form
 │   │       │   └── environment-editor.tsx    # Environment variables editor
@@ -234,9 +254,10 @@ open-modeler-ts/
 │   │   ├── use-project-assets.ts             # Service 2 — asset operations
 │   │   ├── use-project-types.ts              # Service 2 — types management
 │   │   ├── use-ast.ts                        # Service 3 — AST parsing trigger
-│   │   ├── use-execution.ts                  # Service 4 — script execution
-│   │   ├── use-test-runner.ts                # Service 5 — test execution
-│   │   └── use-deployment.ts                 # Service 6 — deployment ops
+│   │   ├── use-flow-graph.ts                 # Service 4 — flow graph state & mutations
+│   │   ├── use-execution.ts                  # Service 5 — script execution
+│   │   ├── use-test-runner.ts                # Service 6 — test execution
+│   │   └── use-deployment.ts                 # Service 7 — deployment ops
 │   │
 │   ├── providers/                            # React context providers
 │   │   ├── MuiProvider.tsx                   # Material UI theme provider
@@ -288,7 +309,7 @@ open-modeler-ts/
 │   │   │           └── typescript-importer.test.ts
 │   │   │
 │   │   ├── ast/                              # ── Service 3: AST Parsing ──
-│   │   │   ├── index.ts                      # Public API: parseSource, serializeAst, buildFlowGraph, transpileSource
+│   │   │   ├── index.ts                      # Public API: parseSource, serializeAst, transpileSource
 │   │   │   ├── parsers/
 │   │   │   │   ├── parser-interface.ts       # Abstract parser contract (for future Python, JS parsers)
 │   │   │   │   └── typescript/               # ts-morph implementation
@@ -302,11 +323,7 @@ open-modeler-ts/
 │   │   │   ├── transpilers/
 │   │   │   │   ├── transpiler.ts             # transpileSource(): TS → JS for QuickJS
 │   │   │   │   └── hook-rewriter.ts          # rewriteHookImports(): @openmodeler/hooks → openmodeler:hooks
-│   │   │   ├── flow/
-│   │   │   │   ├── flow-graph-builder.ts     # buildFlowGraph(ast): AST → ReactFlow nodes & edges
-│   │   │   │   ├── flow-graph-sync.ts        # applyFlowMutations(): flow changes → AST updates
-│   │   │   │   └── flow-types.ts             # FlowGraph, FlowNode, FlowEdge, FlowMutation
-│   │   │   ├── types/                        # AST type definitions (implements PROJECT_AST.md spec)
+│   │   │   ├── types/                        # AST type definitions (implements AST_ARCH.md spec)
 │   │   │   │   ├── project-ast-types.ts      # ProjectAST, Declaration, DeclarationBase
 │   │   │   │   ├── node-types.ts             # NodeType: 'function' | 'chart' | 'table' | 'flow' | 'list'
 │   │   │   │   └── annotation-types.ts       # JsDocAnnotations, SourceRange, ParseDiagnostic
@@ -317,11 +334,20 @@ open-modeler-ts/
 │   │   │       ├── call-graph-analyzer.test.ts
 │   │   │       ├── ast-serializer.test.ts    # Round-trip: parse → serialize → re-parse
 │   │   │       ├── transpiler.test.ts        # TS → valid JS assertions
-│   │   │       ├── hook-rewriter.test.ts     # Import rewriting assertions
-│   │   │       ├── flow-graph-builder.test.ts
-│   │   │       └── flow-graph-sync.test.ts   # Mutation → AST change assertions
+│   │   │       └── hook-rewriter.test.ts     # Import rewriting assertions
 │   │   │
-│   │   ├── engine/                           # ── Service 4: Execution Engine ──
+│   │   ├── flow/                             # ── Service 4: Flow Modeling ──
+│   │   │   ├── index.ts                      # Public API: buildFlowGraph, applyFlowMutations
+│   │   │   ├── flow-graph-builder.ts         # AST → ReactFlow-compatible nodes & edges
+│   │   │   ├── flow-graph-sync.ts            # Flow mutations → AST updates (bidirectional)
+│   │   │   ├── flow-layout-engine.ts         # Auto-layout algorithm for node positioning
+│   │   │   ├── flow-types.ts                 # FlowGraph, FlowNode, FlowEdge, FlowMutation
+│   │   │   └── __tests__/
+│   │   │       ├── flow-graph-builder.test.ts# AST → FlowGraph assertions
+│   │   │       ├── flow-graph-sync.test.ts   # Mutation → AST change assertions
+│   │   │       └── flow-layout-engine.test.ts
+│   │   │
+│   │   ├── engine/                           # ── Service 5: Execution Engine ──
 │   │   │   ├── index.ts                      # Public API: createSandbox, executeSandbox, disposeSandbox
 │   │   │   ├── engines/
 │   │   │   │   ├── engine-interface.ts       # Abstract engine contract (for future Pyodide, etc.)
@@ -351,7 +377,7 @@ open-modeler-ts/
 │   │   │       ├── payload-limiter.test.ts
 │   │   │       └── execution-timeout.test.ts
 │   │   │
-│   │   ├── testing/                          # ── Service 5: Testing Service ──
+│   │   ├── testing/                          # ── Service 6: Testing Service ──
 │   │   │   ├── index.ts                      # Public API: createTestCase, runTests, getReport
 │   │   │   ├── test-case-service.ts          # Test case CRUD operations
 │   │   │   ├── test-runner.ts                # Test execution (calls Engine service)
@@ -362,7 +388,7 @@ open-modeler-ts/
 │   │   │       ├── test-runner.test.ts
 │   │   │       └── test-reporter.test.ts
 │   │   │
-│   │   ├── deployment/                       # ── Service 6: Deployment Service ──
+│   │   ├── deployment/                       # ── Service 7: Deployment Service ──
 │   │   │   ├── index.ts                      # Public API: deploy, getTargets, manageEnvironment
 │   │   │   ├── deployment-service.ts         # Deployment orchestration
 │   │   │   ├── deployment-types.ts           # DeploymentConfig, DeploymentTarget, DeploymentResult
@@ -408,8 +434,14 @@ open-modeler-ts/
 
 ## Services Architecture
 
-Each service has a clear boundary between **backend** (`lib/`) and **frontend** (`components/views/` + `hooks/`).
-Backend logic is framework-agnostic and tested with **Jest**. Frontend components are tested with **Cypress**.
+The application is decomposed into **7 services**, each with a clear boundary between **backend** (`lib/`) and
+**frontend** (`components/views/` + `hooks/`). Backend logic is framework-agnostic and tested with **Jest**. Frontend
+components are tested with **Cypress**.
+
+**Why 7 services, not 6?** AST Parsing (pure data transformation, Jest-tested) and Flow Modeling (ReactFlow
+visualization + node components, Cypress-tested) are fundamentally different concerns. Merging them would blur the
+testing boundary and make agent-driven development harder — the AST parser would risk inadequate Jest coverage when
+bundled with UI code that can only be Cypress-tested.
 
 ```mermaid
 graph TD
@@ -417,7 +449,7 @@ graph TD
         direction LR
         V1["workspace/"]
         V2["code-editor/<br/>types-editor/<br/>assets-browser/"]
-        V3["flow-editor/"]
+        V3["flow-editor/<br/>nodes/"]
         V4["app-preview/"]
         V5["tests-manager/"]
         V6["deploy-manager/"]
@@ -428,9 +460,10 @@ graph TD
         H1["use-projects"]
         H2["use-project<br/>use-project-assets<br/>use-project-types"]
         H3["use-ast"]
-        H4["use-execution"]
-        H5["use-test-runner"]
-        H6["use-deployment"]
+        H4["use-flow-graph"]
+        H5["use-execution"]
+        H6["use-test-runner"]
+        H7["use-deployment"]
     end
 
     subgraph Backend["Backend Layer (Jest-tested)"]
@@ -438,9 +471,10 @@ graph TD
         S1["lib/projects/"]
         S2["lib/project/"]
         S3["lib/ast/"]
-        S4["lib/engine/"]
-        S5["lib/testing/"]
-        S6["lib/deployment/"]
+        S4["lib/flow/"]
+        S5["lib/engine/"]
+        S6["lib/testing/"]
+        S7["lib/deployment/"]
     end
 
     subgraph Shared["Shared Infrastructure"]
@@ -452,15 +486,18 @@ graph TD
 
     V1 --> H1 --> S1
     V2 --> H2 --> S2
-    V3 --> H3 --> S3
-    V4 --> H4 --> S4
-    V5 --> H5 --> S5
-    V6 --> H6 --> S6
+    V3 --> H3 & H4
+    H3 --> S3
+    H4 --> S4
+    V4 --> H5 --> S5
+    V5 --> H6 --> S6
+    V6 --> H7 --> S7
     S1 --> ST
     S2 --> S3
     S2 --> ST
     S4 --> S3
-    S5 --> S4
+    S5 --> S3
+    S6 --> S5
     style Frontend fill: #e3f2fd, stroke: #1565c0
     style Hooks fill: #fff3e0, stroke: #e65100
     style Backend fill: #e8f5e9, stroke: #2e7d32
@@ -536,29 +573,49 @@ specific parsing isolated and testable.
 
 ### Service 3 — AST Parsing (`lib/ast/`)
 
-**Responsibility:** The analysis engine. Takes TypeScript source and produces the `ProjectAST` (as specified in
-`PROJECT_AST.md`). Also handles the reverse path (AST → source serialization) and the flow graph derivation.
+> **Architecture document:** [AST_ARCH.md](AST_ARCH.md)
 
-**Four pipelines (from `PROJECT_AST.md`):**
+**Responsibility:** Pure data transformation service. Takes TypeScript source strings and produces `ProjectAST` data
+structures. Also handles the reverse path (AST → source serialization) and transpilation to QuickJS-ready JavaScript.
+
+**This service is strictly React-free and has no dependency on ReactFlow, the DOM, or any UI framework.** Every
+component is a pure function or stateless class, tested exclusively with Jest.
+
+**Three pipelines:**
 
 | Pipeline      | Components                                                     | Direction           |
 |---------------|----------------------------------------------------------------|---------------------|
 | Parsing       | SourceParser → JsDocExtractor, TypeResolver, CallGraphAnalyzer | Source → AST        |
 | Serialization | AstSerializer                                                  | AST → Source        |
-| Flow          | FlowGraphBuilder, FlowGraphSync                                | AST ↔ ReactFlow     |
 | Transpilation | Transpiler, HookRewriter                                       | Source → QuickJS JS |
 
 **Parser extensibility:** `parser-interface.ts` defines the abstract contract. The `typescript/` directory implements
 it with ts-morph. Future parsers (Python via Pyodide AST, JavaScript via lighter tools) implement the same interface.
 
-**AST types live here:** All types from `PROJECT_AST.md` (`ProjectAST`, `Declaration`, `TypeReference`, etc.) are
-defined in `ast/types/` and re-exported from `ast/index.ts`.
+**AST types live here:** All types from `AST_ARCH.md` (`ProjectAST`, `Declaration`, `TypeReference`, etc.) are
+defined in `ast/types/` and re-exported from `ast/index.ts`. Other services (Flow, Engine) import these types.
 
-**Frontend:** `views/flow-editor/` — the ReactFlow canvas consumes `FlowGraph` from `flow-graph-builder.ts`.
+**Frontend:** None. This service has no direct UI — it is consumed by Service 2 (types extraction), Service 4 (flow
+graph building), and Service 5 (transpilation for execution).
 
 ---
 
-### Service 4 — Execution Engine (`lib/engine/`)
+### Service 4 — Flow Modeling (`lib/flow/` + `components/nodes/` + `views/flow-editor/`)
+
+> **Architecture document:** [FLOW_ARCH.md](FLOW_ARCH.md) — node specifications, bidirectional flow, FlowGraphBuilder/FlowGraphSync/FlowLayoutEngine interfaces.
+
+**Responsibility:** The visual layer. Transforms `ProjectAST` (from Service 3) into ReactFlow-compatible graphs and
+handles the reverse — applying visual editor mutations back to the AST.
+
+**This service has two distinct layers with different testing strategies:** pure data transformation in `lib/flow/`
+(Jest-tested) and React node components + editor view in `components/` (Cypress-tested). See FLOW_ARCH.md for
+node type definitions, component paths, and the bidirectional synchronization flow.
+
+**Frontend:** `views/flow-editor/` — the ReactFlow canvas, toolbar, and sidebar.
+
+---
+
+### Service 5 — Execution Engine (`lib/engine/`)
 
 **Responsibility:** Secure script execution in a sandboxed VM. Manages the full lifecycle: sandbox creation → hook
 registration → script execution → result collection → sandbox disposal.
@@ -566,7 +623,7 @@ registration → script execution → result collection → sandbox disposal.
 **Engine extensibility:** `engine-interface.ts` defines the abstract contract. The `quickjs/` directory implements it.
 Future engines (Pyodide for Python, Deno for enhanced JS) implement the same interface.
 
-**Hooks architecture (from `PROJECT_AST.md`):**
+**Hooks architecture (from `AST_ARCH.md`):**
 
 | Hook      | Category      | Direction     | Host Action                    |
 |-----------|---------------|---------------|--------------------------------|
@@ -582,10 +639,10 @@ Future engines (Pyodide for Python, Deno for enhanced JS) implement the same int
 
 ---
 
-### Service 5 — Testing Service (`lib/testing/`)
+### Service 6 — Testing Service (`lib/testing/`)
 
 **Responsibility:** Test case lifecycle management. Users define test cases with input data and expected outputs.
-The runner executes them through the Execution Engine (Service 4) and reports results.
+The runner executes them through the Execution Engine (Service 5) and reports results.
 
 **Key types:**
 
@@ -612,7 +669,7 @@ interface TestResult {
 
 ---
 
-### Service 6 — Deployment Service (`lib/deployment/`)
+### Service 7 — Deployment Service (`lib/deployment/`)
 
 **Responsibility:** Manages deployment targets and environment variables. This service is mostly a **skeleton for MVP**
 — the interfaces and types are defined, but actual deployment integrations (Vercel, AWS Lambda) are deferred.
@@ -669,9 +726,10 @@ Services may only depend **downward and sideways within the lib/ layer**, never 
 | Projects (1)   | Storage                                 |
 | Project (2)    | Storage, AST (3) for type extraction    |
 | AST (3)        | — (pure logic, no service dependencies) |
-| Engine (4)     | AST (3) for transpilation               |
-| Testing (5)    | Engine (4) for execution                |
-| Deployment (6) | Storage, Engine (4) for env injection   |
+| Flow (4)       | AST (3) for ProjectAST types            |
+| Engine (5)     | AST (3) for transpilation               |
+| Testing (6)    | Engine (5) for execution                |
+| Deployment (7) | Storage, Engine (5) for env injection   |
 
 ## MVP Scope
 
@@ -684,8 +742,9 @@ that can be plugged in later without refactoring. The following priorities apply
 |--------------|----------------------------------------------------------------------|
 | Projects (1) | Full CRUD with IndexedDB. Asset-aware StoredProject type.            |
 | Project (2)  | Metadata CRUD. TypeScript source as primary asset. Basic asset list. |
-| AST (3)      | Full parsing pipeline (SourceParser through FlowGraphBuilder).       |
-| Engine (4)   | QuickJS sandbox lifecycle. Push hooks (chart, table, log).           |
+| AST (3)      | Full parsing pipeline (SourceParser + all sub-components).           |
+| Flow (4)     | FlowGraphBuilder (AST → graph). Basic node components.               |
+| Engine (5)   | QuickJS sandbox lifecycle. Push hooks (chart, table, log).           |
 | Storage      | IndexedDB adapter with schema versioning.                            |
 
 ### Post-MVP (Interfaces Ready, Implementation Deferred)
@@ -693,10 +752,11 @@ that can be plugged in later without refactoring. The following priorities apply
 | Service        | Scope                                                     |
 |----------------|-----------------------------------------------------------|
 | Project (2)    | CSV/JSON importers. Utility and service asset kinds.      |
-| AST (3)        | AstSerializer (flow → source round-trip). HookRewriter.   |
-| Engine (4)     | Bidirectional hooks (ai, fetch). Security layer.          |
-| Testing (5)    | Test case CRUD. Simple assertion runner.                  |
-| Deployment (6) | Environment variables only. No actual deployment targets. |
+| AST (3)        | AstSerializer (AST → source round-trip). HookRewriter.    |
+| Flow (4)       | FlowGraphSync (mutations → AST). Layout engine.           |
+| Engine (5)     | Bidirectional hooks (ai, fetch). Security layer.          |
+| Testing (6)    | Test case CRUD. Simple assertion runner.                  |
+| Deployment (7) | Environment variables only. No actual deployment targets. |
 
 ### Future (Not Started)
 
@@ -704,40 +764,123 @@ that can be plugged in later without refactoring. The following priorities apply
 |--------------------------|----------------|
 | Git storage adapter      | Storage        |
 | Python parser (Pyodide)  | AST (3)        |
-| Pyodide execution engine | Engine (4)     |
-| Vercel deployment target | Deployment (6) |
-| AWS Lambda target        | Deployment (6) |
-| AWS Lambda target        | Deployment (6) |
+| Pyodide execution engine | Engine (5)     |
+| Vercel deployment target | Deployment (7) |
+| AWS Lambda target        | Deployment (7) |
 
-# Architect Concerns
+## Architect Review — MVP Risks & Open Questions
 
-1. Looks like "AST Parsing" is both parsing and visualisation. We have huge amount of complexity that can be tested
-   simply with Jest (that is AST parsing) and a very ambitious low code and no code layer that is the ReactFlow graph
-   and various nodes to be
-   edited. Even AST parsing is basically Jest tested isolated React free library, and meanwhile ReactFlow probably
-   cannot be even Jest tested and will be tested probably with Cypress only, I really do not want to treat both of them
-   as a single service! This will raise big problems for Agent driven development, and you risk simply blend them so
-   much, that AST might not be even properly Jest tested.
-    - It is very important to have at least logical separation from ReactFlow with nodes from the actual AST parsing.
-      Also, parsing is bidirectional: user can crate new node that will be parsed back to AST as a function.
-    - Review PROJECT_AST.md and split it into two parts: one that is about AST parsing and another that is about
-      ReactFlow graph with all nodes definitions. Find `## Nodes` section and clarify it. We will have a limited set of
-      nodes, but mention at least react component names, so Agent could easily navigate to react component from the
-      document.
+> ⚠️ **This section must be resolved before implementation begins.** Each item is either a contradiction between
+> documents, an under-specified area, or a dependency gap that would block or derail development.
 
-You're highly paid architect advisor who knows the best industry practices, please advise on this concern and clarify
-documentation. You can look at the existing design work in sceptical way to reach state-of-the-art architecture. We're
-in design phase, so any change is allowed.
+### 🔴 Critical — Must Resolve
 
-Also, `ARCHITECTURE.md` should have a brief description of how we will organize files:
+#### 1. Round-trip editing is Post-MVP, but it's the core value proposition
 
-```
-- Entry document is [ARCHITECTURE.md](doc/architecture/ARCHITECTURE.md)
-- All design documents are in `doc/` folder marked as following:
-  - `*_ARCH.md` the initial definition of the service, component or feature architecture. This is the first document to be created for any new service or major component.
-  - `*_REQ.md` for high-level requirements to be used to design proper user story. They will be added later.
-  - `*_STORY.md` for implementation stories that guide development of specific features or components.
-  - `*_SPEC.md` completed stories appear as specifications that can be referred to by other stories or design documents.
+```mermaid
+flowchart LR
+    A["Business Case #3:<br/>'Flow editor changes are<br/>serialized back to the script'"] -->|requires| B["AstSerializer"]
+    A -->|requires| C["FlowGraphSync"]
+    B -->|listed as| D["Post-MVP ❌"]
+    C -->|listed as| D
 ```
 
-Not that you're working with _ARCH documents for now, because we're in design phase.
+**Business Case #3** states: *"Flow editor changes are serialized back to the script and saved in IndexedDB."*
+This requires `AstSerializer` (AST → source) and `FlowGraphSync` (mutations → AST) — both listed as **Post-MVP**.
+Without them, the flow editor is **read-only** in MVP. This either contradicts the business case, or the MVP scope
+table needs updating.
+
+**Decision required:** Is a read-only flow editor acceptable for MVP? If yes, update Business Case #3 to reflect
+phased delivery. If no, move `AstSerializer` and `FlowGraphSync` into MVP scope.
+
+---
+
+#### 2. Single-file parser vs. multi-asset project model
+
+The AST parser signature is `parseSource(source: string): ProjectAST` — it processes **one source string**. But the
+`StoredProject` type defines `assets: ProjectAsset[]` — a project can have multiple TypeScript files (`source`,
+`types.ts`, utilities, services).
+
+**Unresolved questions:**
+
+- Does each `.ts` asset get its own `ProjectAST`? If so, how are cross-file type references resolved?
+- Or is there a designated "main" source file, with other assets treated as auxiliary data?
+- How does `types.ts` (a separate asset) integrate with the main source's AST? The types extractor (Service 2)
+  "extracts interfaces from source via AST service" — but from which source?
+
+**Decision required:** Define the relationship between `ProjectAsset[]` and `ProjectAST`. Suggested approach: designate
+one `source` asset as the "main" entry point that gets parsed. Types from `types.ts` are injected into the parser
+context. Other assets are imported data, not parsed into the AST.
+
+---
+
+#### 3. `TestAssertion` type is referenced but never defined
+
+`Service 6` `TestCase` interface includes `assertions: TestAssertion[]`, but `TestAssertion` is never defined in any
+document. What assertion types are supported? Deep equality? Contains? Regex match? Schema validation?
+
+**Decision required:** Define `TestAssertion` type before implementing Service 6, or simplify to
+`expectedOutput: unknown` with deep equality only for MVP.
+
+---
+
+### 🟡 Important — Should Clarify
+
+#### 4. Save path not specified
+
+The sequence diagram shows how a script is **loaded** (IDB → parse → render) but does not show the **save** path.
+When a user edits code in CodeMirror:
+
+- Which service owns the "save" operation?
+- Does the source get re-parsed on every save, or only on explicit action?
+- Is there an auto-save or debounced save?
+
+**Recommendation:** Add a "Save & Re-parse" sequence diagram showing the write path.
+
+---
+
+#### 5. QuickJS WASM loading strategy
+
+The architecture mandates SSG deployment on S3, but QuickJS requires a WASM binary at runtime. No document specifies:
+
+- Where the WASM binary lives (presumably `public/pkg-quickjs/`)
+- How it's loaded (dynamic import? `fetch`?)
+- What happens when loading fails (offline, corrupted file)
+
+**Recommendation:** Add a brief WASM loading section to the Engine service description, or create
+`ENGINE_ARCH.md` when implementation begins.
+
+---
+
+#### 6. Hook types ownership ambiguity
+
+The `@openmodeler/hooks` virtual module types (`ChartConfig`, `AiRequestOptions`, etc.) are specified in
+[AST_ARCH.md](AST_ARCH.md) as part of the parser's hook system. But at runtime, these types also appear in
+`lib/engine/hooks-types.ts`. Both the parser (compile-time) and the engine (runtime) need these types.
+
+**Recommendation:** Define hook types once in `lib/engine/hooks-types.ts` (the runtime is authoritative). The parser
+imports them for type-checking but doesn't re-define them. Update AST_ARCH.md to reference the engine's types.
+
+---
+
+### 🟢 Minor — Track for Later
+
+#### 7. Node JSDoc annotations: required vs. optional
+
+The AST_ARCH.md defines several `@nodeType`, `@displayName`, `@visible` annotations but doesn't specify which are
+**required** for a declaration to appear in the flow graph. What happens when:
+
+- A function has no `@nodeType` annotation? (Hidden? Default to `function`?)
+- A function has `@nodeType chart` but no `chart()` hook call? (Render empty chart node?)
+
+**Recommendation:** Define default behavior when annotations are missing. Suggested: functions without `@nodeType`
+default to `function` node type; `@visible false` hides them.
+
+---
+
+#### 8. `ProjectAST.metadata` is sparse
+
+The `ProjectAST` interface has a `metadata` field, but its shape is not defined in AST_ARCH.md beyond the top-level
+structure. What goes in metadata? Parse timestamps? Source hash? Version?
+
+**Recommendation:** Define a `ParseMetadata` interface or defer metadata to Post-MVP.
