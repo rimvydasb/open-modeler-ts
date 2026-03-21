@@ -17,14 +17,14 @@ Project is in design phase.
 | Document                                         | Service               | Status |
 |--------------------------------------------------|-----------------------|--------|
 | [ARCHITECTURE.md](ARCHITECTURE.md)               | All — master overview | Active |
-| [AST_ARCH.md](AST_ARCH.md)                       | AST Parsing (3)       | Active |
-| [FLOW_ARCH.md](FLOW_ARCH.md)                     | Flow Modeling (4)     | Active |
-| [example-loan-return.ts](example-loan-return.ts) | Reference example     | —      |
+| [03-AST-PARSING.md](03-AST-PARSING.md)                       | AST Parsing (3)       | Active |
+| [04-FLOW-MODELING.md](04-FLOW-MODELING.md)                     | Flow Modeling (4)     | Active |
+| [examples/example-loan-return.ts](examples/example-loan-return.ts) | Reference example     | —      |
 
 ## Master Business Case
 
 1. User can edit and save business logic scripts edited in a code editor (e.g. CodeMirror) within the React Flow
-   low-code environment. Example of the script: [example-loan-return.ts](example-loan-return.ts)
+   low-code environment. Example of the script: [examples/example-loan-return.ts](examples/example-loan-return.ts)
 2. Script is the project. Multiple projects can be stored in IndexedDB and listed in the landing page.
 3. The script is parsed to the higher level OpenModel Project AST (using ts-morph) to generate the graph in the React
    Flow editor. Flow editor changes are serialized back to the script and saved in IndexedDB.
@@ -156,9 +156,15 @@ build tooling overhead, which is the right trade-off for a browser-only SPA at t
 open-modeler-ts/
 ├── docs/                                     # Architecture & design documents
 │   ├── ARCHITECTURE.md                       # This document — master overview
-│   ├── AST_ARCH.md                           # Service 3: AST parsing architecture
-│   ├── FLOW_ARCH.md                          # Service 4: Flow modeling architecture
-│   └── example-loan-return.ts                # Reference example script
+│   ├── 01-PROJECTS-SERVICE.md                # Service 1: Workspace, Multi-project CRUD, IDB Storage
+│   ├── 02-PROJECT-SERVICE.md                 # Service 2: Single Project Metadata, Assets, Types Extractor
+│   ├── 03-AST-PARSING.md                     # Service 3: ts-morph, Data Pipelines (formerly 03-AST-PARSING.md)
+│   ├── 04-FLOW-MODELING.md                   # Service 4: ReactFlow, Sync, Layout Engine (formerly 04-FLOW-MODELING.md)
+│   ├── 05-EXECUTION-ENGINE.md                # Service 5: QuickJS Sandbox, FFI, Host Bridge hooks
+│   ├── 06-TESTING-SERVICE.md                 # Service 6: Execution orchestration, reporting
+│   ├── 07-DEPLOYMENT-SERVICE.md              # Service 7: Target adapters, environment variables
+│   └── examples/
+│       └── example-loan-return.ts            # Reference example script
 │
 ├── cypress/                                  # E2E tests (frontend, Cypress)
 │   ├── e2e/
@@ -323,7 +329,7 @@ open-modeler-ts/
 │   │   │   ├── transpilers/
 │   │   │   │   ├── transpiler.ts             # transpileSource(): TS → JS for QuickJS
 │   │   │   │   └── hook-rewriter.ts          # rewriteHookImports(): @openmodeler/hooks → openmodeler:hooks
-│   │   │   ├── types/                        # AST type definitions (implements AST_ARCH.md spec)
+│   │   │   ├── types/                        # AST type definitions (implements 03-AST-PARSING.md spec)
 │   │   │   │   ├── project-ast-types.ts      # ProjectAST, Declaration, DeclarationBase
 │   │   │   │   ├── node-types.ts             # NodeType: 'function' | 'chart' | 'table' | 'flow' | 'list'
 │   │   │   │   └── annotation-types.ts       # JsDocAnnotations, SourceRange, ParseDiagnostic
@@ -573,7 +579,7 @@ specific parsing isolated and testable.
 
 ### Service 3 — AST Parsing (`lib/ast/`)
 
-> **Architecture document:** [AST_ARCH.md](AST_ARCH.md)
+> **Architecture document:** [03-AST-PARSING.md](03-AST-PARSING.md)
 
 **Responsibility:** Pure data transformation service. Takes TypeScript source strings and produces `ProjectAST` data
 structures. Also handles the reverse path (AST → source serialization) and transpilation to QuickJS-ready JavaScript.
@@ -592,7 +598,7 @@ component is a pure function or stateless class, tested exclusively with Jest.
 **Parser extensibility:** `parser-interface.ts` defines the abstract contract. The `typescript/` directory implements
 it with ts-morph. Future parsers (Python via Pyodide AST, JavaScript via lighter tools) implement the same interface.
 
-**AST types live here:** All types from `AST_ARCH.md` (`ProjectAST`, `Declaration`, `TypeReference`, etc.) are
+**AST types live here:** All types from `03-AST-PARSING.md` (`ProjectAST`, `Declaration`, `TypeReference`, etc.) are
 defined in `ast/types/` and re-exported from `ast/index.ts`. Other services (Flow, Engine) import these types.
 
 **Frontend:** None. This service has no direct UI — it is consumed by Service 2 (types extraction), Service 4 (flow
@@ -602,13 +608,13 @@ graph building), and Service 5 (transpilation for execution).
 
 ### Service 4 — Flow Modeling (`lib/flow/` + `components/nodes/` + `views/flow-editor/`)
 
-> **Architecture document:** [FLOW_ARCH.md](FLOW_ARCH.md) — node specifications, bidirectional flow, FlowGraphBuilder/FlowGraphSync/FlowLayoutEngine interfaces.
+> **Architecture document:** [04-FLOW-MODELING.md](04-FLOW-MODELING.md) — node specifications, bidirectional flow, FlowGraphBuilder/FlowGraphSync/FlowLayoutEngine interfaces.
 
 **Responsibility:** The visual layer. Transforms `ProjectAST` (from Service 3) into ReactFlow-compatible graphs and
 handles the reverse — applying visual editor mutations back to the AST.
 
 **This service has two distinct layers with different testing strategies:** pure data transformation in `lib/flow/`
-(Jest-tested) and React node components + editor view in `components/` (Cypress-tested). See FLOW_ARCH.md for
+(Jest-tested) and React node components + editor view in `components/` (Cypress-tested). See 04-FLOW-MODELING.md for
 node type definitions, component paths, and the bidirectional synchronization flow.
 
 **Frontend:** `views/flow-editor/` — the ReactFlow canvas, toolbar, and sidebar.
@@ -623,7 +629,7 @@ registration → script execution → result collection → sandbox disposal.
 **Engine extensibility:** `engine-interface.ts` defines the abstract contract. The `quickjs/` directory implements it.
 Future engines (Pyodide for Python, Deno for enhanced JS) implement the same interface.
 
-**Hooks architecture (from `AST_ARCH.md`):**
+**Hooks architecture (from `03-AST-PARSING.md`):**
 
 | Hook      | Category      | Direction     | Host Action                    |
 |-----------|---------------|---------------|--------------------------------|
@@ -855,11 +861,11 @@ The architecture mandates SSG deployment on S3, but QuickJS requires a WASM bina
 #### 6. Hook types ownership ambiguity
 
 The `@openmodeler/hooks` virtual module types (`ChartConfig`, `AiRequestOptions`, etc.) are specified in
-[AST_ARCH.md](AST_ARCH.md) as part of the parser's hook system. But at runtime, these types also appear in
+[03-AST-PARSING.md](03-AST-PARSING.md) as part of the parser's hook system. But at runtime, these types also appear in
 `lib/engine/hooks-types.ts`. Both the parser (compile-time) and the engine (runtime) need these types.
 
 **Recommendation:** Define hook types once in `lib/engine/hooks-types.ts` (the runtime is authoritative). The parser
-imports them for type-checking but doesn't re-define them. Update AST_ARCH.md to reference the engine's types.
+imports them for type-checking but doesn't re-define them. Update 03-AST-PARSING.md to reference the engine's types.
 
 ---
 
@@ -867,7 +873,7 @@ imports them for type-checking but doesn't re-define them. Update AST_ARCH.md to
 
 #### 7. Node JSDoc annotations: required vs. optional
 
-The AST_ARCH.md defines several `@nodeType`, `@displayName`, `@visible` annotations but doesn't specify which are
+The 03-AST-PARSING.md defines several `@nodeType`, `@displayName`, `@visible` annotations but doesn't specify which are
 **required** for a declaration to appear in the flow graph. What happens when:
 
 - A function has no `@nodeType` annotation? (Hidden? Default to `function`?)
@@ -880,7 +886,7 @@ default to `function` node type; `@visible false` hides them.
 
 #### 8. `ProjectAST.metadata` is sparse
 
-The `ProjectAST` interface has a `metadata` field, but its shape is not defined in AST_ARCH.md beyond the top-level
+The `ProjectAST` interface has a `metadata` field, but its shape is not defined in 03-AST-PARSING.md beyond the top-level
 structure. What goes in metadata? Parse timestamps? Source hash? Version?
 
 **Recommendation:** Define a `ParseMetadata` interface or defer metadata to Post-MVP.

@@ -23,7 +23,7 @@ in isolation with Jest. The React layer depends on `lib/flow/` but never the rev
 
 ## Flow Graph Derivation
 
-The flow graph is derived from the `ProjectAST` (defined in [AST_ARCH.md](AST_ARCH.md)) using these rules:
+The flow graph is derived from the `ProjectAST` (defined in [03-AST-PARSING.md](03-AST-PARSING.md)) using these rules:
 
 1. **Nodes** — Each `Declaration` with a `nodeType` annotation becomes a ReactFlow node. The `id`, `displayName`
    (or `name`), and `nodeType` map directly to the node's visual representation.

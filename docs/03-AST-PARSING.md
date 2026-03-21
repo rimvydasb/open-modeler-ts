@@ -14,12 +14,12 @@ source of truth for:
 - Extracting function signatures, types, and metadata from TypeScript source
 - Serializing AST changes back to TypeScript source (round-trip editing)
 - Transpiling TypeScript to QuickJS-ready JavaScript for execution
-- Providing type information to the Flow Modeling service (see [FLOW_ARCH.md](FLOW_ARCH.md))
+- Providing type information to the Flow Modeling service (see [04-FLOW-MODELING.md](04-FLOW-MODELING.md))
 
 This document specifies all TypeScript interfaces that compose the Project AST, the parsing pipeline components,
 and the hooks type system.
 
-> **Flow graph derivation, node components, and visual editing are defined in [FLOW_ARCH.md](FLOW_ARCH.md).**
+> **Flow graph derivation, node components, and visual editing are defined in [04-FLOW-MODELING.md](04-FLOW-MODELING.md).**
 > **Persistence model (StoredProject) is defined in [ARCHITECTURE.md](ARCHITECTURE.md) under Service 1.**
 
 ## Architectural Views
@@ -74,53 +74,9 @@ graph TB
     style ExecutionLayer fill: #e8f5e9, stroke: #2e7d32
 ```
 
-### 2. Runtime Execution Architecture (Host vs. Guest)
+### 2. Runtime Execution Architecture (Moved)
 
-This view focuses entirely on the Host vs. Guest execution boundary, memory isolation, and host-guest communication. The Guest (QuickJS) is completely unaware of TypeScript or the AST; it only executes transpiled JavaScript and communicates through the strict FFI (Foreign Function Interface) boundary.
-
-```mermaid
-graph TB
-    subgraph HostEnvironment["Host Environment (SPA) - Execution Engine (Service 5)"]
-        ENG["Host Context & Input Prep"]
-        HOOKS["Host Bridge<br/>(Hooks Implementation)"]
-        AP["App Preview<br/>(React State)"]
-        TSQ["TanStack Query<br/>(Request Manager)"]
-    end
-
-    subgraph SecurityBoundary["FFI Boundary"]
-        FFI["Secure Sandbox Isolation"]
-    end
-
-    subgraph GuestEnvironment["Guest Environment - QuickJS"]
-        QJS["QuickJS VM<br/>(V8 / WASM)"]
-        EXEC["Executing Logic"]
-    end
-
-    subgraph ExternalServices["External Services"]
-        LLM["Local LLM Endpoint"]
-        API["External HTTP APIs"]
-    end
-
-    ENG -- " 1. Inject Executable JS " --> QJS
-    ENG -- " 2. Pass Inputs (mapped via signatures) " --> QJS
-    
-    QJS --- FFI
-    FFI --- HOOKS
-
-    QJS -- " await ai(), fetch() " --> HOOKS
-    QJS -- " chart(), table(), log() " --> HOOKS
-
-    HOOKS -- " push data " --> AP
-    HOOKS -- " async request " --> TSQ
-    
-    TSQ -- " HTTP " --> LLM
-    TSQ -- " HTTP " --> API
-
-    style HostEnvironment fill: #e3f2fd, stroke: #1565c0
-    style GuestEnvironment fill: #e8f5e9, stroke: #2e7d32
-    style SecurityBoundary fill: #cfd8dc, stroke: #424242, color: #000
-    style ExternalServices fill: #fce4ec, stroke: #c62828
-```
+> **Note:** The Runtime Execution Architecture (Host vs. Guest) model has been extracted and moved to its correct bounded context in **Service 5: Execution Engine**. See [05-EXECUTION-ENGINE.md](05-EXECUTION-ENGINE.md).
 
 ## AST Structural Diagram
 
@@ -493,7 +449,7 @@ interface ProjectAST {
 
 ## Example: Loan Return Script → AST
 
-Given [example-loan-return.ts](example-loan-return.ts), the parser produces:
+Given [examples/example-loan-return.ts](examples/example-loan-return.ts), the parser produces:
 
 ```typescript
 const projectAST: ProjectAST = {
@@ -733,7 +689,7 @@ const projectAST: ProjectAST = {
 
 ## Flow Graph Derivation
 
-> **Moved to [FLOW_ARCH.md](FLOW_ARCH.md).** The flow graph derivation rules, node component specifications,
+> **Moved to [04-FLOW-MODELING.md](04-FLOW-MODELING.md).** The flow graph derivation rules, node component specifications,
 > and persistence model are now defined in the Flow Modeling architecture document.
 
 ## Parser Components Architecture
@@ -784,14 +740,14 @@ graph LR
     style TranspilationPipeline fill: #fce4ec, stroke: #c62828
 ```
 
-> **Note:** The Flow Pipeline (AST ↔ ReactFlow) has been moved to Service 4 — see [FLOW_ARCH.md](FLOW_ARCH.md).
+> **Note:** The Flow Pipeline (AST ↔ ReactFlow) has been moved to Service 4 — see [04-FLOW-MODELING.md](04-FLOW-MODELING.md).
 
 ### Component Specifications
 
 Each component is a pure function or a stateless class. All live in `src/lib/ast/`.
 
 > **FlowGraphBuilder and FlowGraphSync** have been moved to `src/lib/flow/` (Service 4).
-> See [FLOW_ARCH.md](FLOW_ARCH.md) for their specifications.
+> See [04-FLOW-MODELING.md](04-FLOW-MODELING.md) for their specifications.
 
 #### SourceParser
 
