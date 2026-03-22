@@ -179,7 +179,7 @@ into individual projects.
 - **Source:** User projects stored in browser IndexedDB (Store: `projects`).
 - **Display:** Grid of project cards with metadata (Name, Description, Last Modified).
 - **Actions:**
-    - **Open:** Navigates to `#flow/:projectId` (opens the Flow Editor by default).
+    - **Open:** Navigates to `#flow/:projectId` (the Project Explorer determines which flow to display — see [PROJECT_EXPLORER_ARCH.md](PROJECT_EXPLORER_ARCH.md#default-flow-on-project-open)).
     - **Delete:** Removes the project from IndexedDB (with confirmation dialog).
     - **Create New:** Floating action button initializes a blank project with a form dialog.
 

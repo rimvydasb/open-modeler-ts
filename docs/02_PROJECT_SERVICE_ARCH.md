@@ -23,7 +23,8 @@ The service is divided into two primary sub-domains:
 **Types Management Note:** Type definitions are stored as a `types.ts` asset (with `kind: 'types'`) within the project.
 The AST Parsing Service (Service 3) parses this file and produces `TypeDeclaration[]`. The Types Editor view reads
 these declarations and writes changes back through `SourceMutator` (Service 3), with updated content saved here in
-Service 2.
+Service 2. The `types.ts` asset is guaranteed to exist by the
+[Project Validation Step](01_PROJECTS_SERVICE_ARCH.md#project-validation-step).
 
 The `ProjectService` acts as a façade, exposing a unified API that coordinates the sub-services. Hooks
 (`use-project`, `use-project-assets`) bridge this service to the React UI layer.

@@ -214,8 +214,70 @@ Validates `CreateProjectInput` and update inputs. Enforces business rules:
 When a new project is created, two default assets are generated:
 
 1. **`main.ts`** (`kind: 'source'`) — the primary TypeScript source file, initially containing a minimal `main()`
-   function template
+   function template with `@nodeType flow` annotation
 2. **`types.ts`** (`kind: 'types'`) — the default types file for user-defined interfaces, initially empty
+
+## Project Validation Step
+
+Every time a project is **opened** (i.e., navigated to via `#flow/:projectId` or any project-scoped route), a
+validation step runs to ensure the project meets structural invariants. This prevents downstream errors in the
+Flow Editor, Types Editor, and Execution Engine.
+
+**When it runs:** After the project metadata and asset list are loaded from IndexedDB, before any view renders.
+
+**Validation rules:**
+
+1. **Ensure `types.ts` exists.** If no asset with `kind: 'types'` and `filename: 'types.ts'` is found in the
+   project's asset list, create one with empty content and persist it.
+2. **Ensure `main.ts` exists.** If no asset with `kind: 'source'` and `filename: 'main.ts'` is found, create one
+   with a minimal `main()` flow function template and persist it.
+3. **Ensure at least one flow exists.** After loading and parsing assets via AST Parsing (Service 3), check the
+   `declarations` for at least one `FlowDeclaration` (nodeType `'flow'`). If none is found, inject a default
+   `main()` flow function into `main.ts` via `SourceMutator` and persist the updated content.
+
+```mermaid
+sequenceDiagram
+    participant UI as Project View
+    participant Hook as useProject
+    participant Svc as ProjectsService
+    participant IDB as StorageInterface
+    participant AST as AST Parser (Svc 3)
+
+    Note over UI, AST: Project Open — Validation Step
+    UI ->> Hook: open project (projectId)
+    Hook ->> Svc: getProject(projectId)
+    Svc ->> IDB: get("projects_metadata", projectId)
+    IDB -->> Svc: StoredProject
+
+    Svc ->> Svc: validateProjectStructure(project)
+
+    alt types.ts missing
+        Svc ->> Svc: create types.ts asset (empty)
+        Svc ->> IDB: put("project_assets", typesAssetId, "")
+        Svc ->> IDB: put("projects_metadata", id, updatedProject)
+    end
+
+    alt main.ts missing
+        Svc ->> Svc: create main.ts asset (template)
+        Svc ->> IDB: put("project_assets", mainAssetId, template)
+        Svc ->> IDB: put("projects_metadata", id, updatedProject)
+    end
+
+    Svc -->> Hook: validated StoredProject
+    Hook ->> AST: parseProject(assets)
+    AST -->> Hook: ProjectAST
+
+    alt no FlowDeclaration found
+        Hook ->> Hook: inject default main() flow via SourceMutator
+        Hook ->> Svc: updateAssetContent(mainAssetId, updatedContent)
+        Hook ->> AST: re-parse
+    end
+
+    Hook -->> UI: project ready
+```
+
+**Implementation location:** `ProjectsService.validateProjectStructure()` for asset-level checks.
+Flow existence check runs in `useProject` hook after AST parsing.
 
 > For file structure, see
 > [ARCHITECTURE.md — Proposed Project Component Structure](ARCHITECTURE.md#proposed-project-component-structure).

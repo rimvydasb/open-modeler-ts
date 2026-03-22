@@ -94,7 +94,7 @@ classDiagram
 
 The flow graph is **scoped** to a specific flow function (the `targetFlowId`). It is derived from the `ProjectAST` (defined in [03_AST_PARSING_ARCH.md](03_AST_PARSING_ARCH.md)) using these rules:
 
-1. **Graph Scope:** The builder starts at the function defined by `targetFlowId` (which defaults to the AST's `rootFlowId`).
+1. **Graph Scope:** The builder starts at the function defined by `targetFlowId` (provided via the route `/#flow/:projectId/:targetFlowId`).
 2. **Nodes:** The builder analyzes the code body of the target flow function. In a flow function, each line of code typically follows the pattern `{variable} = {function}({args})`. For every function called within the body, a ReactFlow node is generated. The `id`, `displayName` (or `name`), and `nodeType` map directly to the called function's declaration.
 3. **Edges (Data Flow):** Edges are derived from the `CallExpression` relationships and variable assignments within the target flow function's body. By parsing which output `{variable}` is passed as `{args}` into subsequent functions, the builder knows exactly which output pin connects to which input pin.
 4. **Ports:** Input ports are derived from `ParameterInfo[]` and output ports from `returnType`. Port type labels come from `TypeReference.name`.
@@ -136,11 +136,11 @@ The flow editor renders a fixed set of node types. Each node type has a correspo
 - **Component (Sub-Flow):** `components/nodes/subflow-node/subflow-node.tsx`
 - **Node Type:** `flow`
 - **Display:**
-    - **Root Flow:** If a function (e.g., `main()`) is tagged with `@nodeType flow` and acts as the root flow, it is **not** rendered as a visible node. Instead, it defines the root ReactFlow canvas itself.
-    - **Sub-Flow Node:** If other functions are tagged with `@nodeType flow` (i.e., they are not the root flow), they are rendered as a `<SubFlowNode>`.
+    - **Canvas Flow:** When a flow function (e.g., `main()`) is opened via the Project Explorer or route navigation, it defines the ReactFlow canvas. Its call expressions become the nodes on that canvas.
+    - **Sub-Flow Node:** If a flow function is called within another flow's body, it is rendered as a `<SubFlowNode>` — a clickable node that navigates into its own canvas.
 - **Edit:**
-    - **Root Flow:** Users interact with the ReactFlow canvas directly in the flow editor view (`views/flow-editor/`).
-    - **Sub-Flow Node:** Interacting with a `<SubFlowNode>` will navigate into and open another ReactFlow canvas specifically for that sub-graph.
+    - **Canvas Flow:** Users interact with the ReactFlow canvas directly in the flow editor view (`views/flow-editor/`).
+    - **Sub-Flow Node:** Clicking a `<SubFlowNode>` navigates to `/#flow/:projectId/:subFlowId` to open its own canvas.
 
 ### `<ListNode>` — `list`
 
@@ -167,12 +167,12 @@ interface FlowGraph {
 /**
  * Builds a scoped ReactFlow graph from a ProjectAST starting from a specific flow function.
  * - targetFlowId: The ID of the flow function to render (from the route /#flow/:projectId/:targetFlowId).
- *   If omitted or "root", defaults to the AST's `rootFlowId`.
+ *   Required — the Project Explorer or navigation determines which flow to open.
  *
  * Traverses the Call Graph starting from the target flow function, deriving edges
  * from CallExpressions within that function's body.
  */
-function buildFlowGraph(ast: ProjectAST, targetFlowId?: string): FlowGraph;
+function buildFlowGraph(ast: ProjectAST, targetFlowId: string): FlowGraph;
 ```
 
 **Test strategy:** Provide known `ProjectAST` structures, assert the correct nodes are created (visible only),

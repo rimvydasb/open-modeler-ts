@@ -115,7 +115,13 @@ sequenceDiagram
 
 Types are stored as a `types.ts` file in `project_assets` (Service 2) with `kind: 'types'`. This file follows the
 same lazy-loading pattern as other project assets — content is not kept in memory, but loaded on demand and parsed
-via the AST Parsing Service.
+via the AST Parsing Service. The `types.ts` asset is guaranteed to exist by the
+[Project Validation Step](01_PROJECTS_SERVICE_ARCH.md#project-validation-step).
+
+> **MVP Simplification:** For MVP, the AST parser extracts `TypeDeclaration` entries from **both** `types.ts` and
+> `main.ts`. This means interfaces declared inline in `main.ts` (e.g., `interface PaymentLine { ... }`) will also
+> appear in the Types Editor as read-only entries. Only types in `types.ts` can be edited through the GUI. This
+> avoids forcing users to move all type definitions to a separate file during early adoption.
 
 **Example `types.ts` content:**
 

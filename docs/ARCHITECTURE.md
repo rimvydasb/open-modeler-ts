@@ -24,6 +24,7 @@ Project is in design phase.
 | [06_EXECUTION_ENGINE_ARCH.md](06_EXECUTION_ENGINE_ARCH.md)         | Execution Engine (6)    | Active |
 | [07_TESTING_SERVICE_ARCH.md](07_TESTING_SERVICE_ARCH.md)           | Testing Service (7)     | Active |
 | [08_DEPLOYMENT_SERVICE_ARCH.md](08_DEPLOYMENT_SERVICE_ARCH.md)     | Deployment Service (8)  | OUT OF SCOPE |
+| [PROJECT_EXPLORER_ARCH.md](PROJECT_EXPLORER_ARCH.md)               | Project Explorer (UI)   | Active |
 | [examples/example-loan-return.ts](examples/example-loan-return.ts) | Reference example       | —      |
 
 ## Master Business Case
@@ -93,7 +94,7 @@ sequenceDiagram
    browser DOM or fetch. The transpiled JavaScript is loaded into the VM.
 6. **Register host hooks** — The host injects bridge functions like `ai(prompt)` into the sandbox global scope before the script runs. Business logic can call them like any normal async function or global variable.
 7. **Pass inputs** — The host uses the previously extracted AST signatures to correctly map UI state variables and inject them as parameters into the Guest execution context.
-8. **Invoke target function** — QuickJS evaluates the script and explicitly invokes the target function (the root flow or service method) by name, passing the mapped inputs.
+8. **Invoke target function** — QuickJS evaluates the script and explicitly invokes the target flow function by name, passing the mapped inputs.
 9. **ai() call — VM suspends** — When business logic hits `await ai("...")`, the VM yields control back to the SPA
    host and waits for the Promise to resolve.
 10. **fetchQuery()** — Host calls `queryClient.fetchQuery()` imperatively to trigger the LLM HTTP call via TanStack
@@ -245,6 +246,7 @@ open-modeler-ts/
 │   ├── 06_EXECUTION_ENGINE_ARCH.md           # Service 6: QuickJS Sandbox, FFI, Host Bridge hooks
 │   ├── 07_TESTING_SERVICE_ARCH.md            # Service 7: Execution orchestration, reporting
 │   ├── 08_DEPLOYMENT_SERVICE_ARCH.md         # Service 8: Target adapters, environment variables
+│   ├── PROJECT_EXPLORER_ARCH.md              # Project Explorer: sidebar tree navigation
 │   └── examples/
 │       └── example-loan-return.ts            # Reference example script
 │
@@ -256,6 +258,7 @@ open-modeler-ts/
 │   │   ├── visual-editor.cy.ts               # Advanced context editor
 │   │   ├── code-editor.cy.ts                 # Service 3 — code editing round-trip
 │   │   ├── types.cy.ts                       # Types Editor — types management GUI
+│   │   ├── project-explorer.cy.ts            # Project Explorer — sidebar tree navigation
 │   │   ├── tests-summary.cy.ts               # Service 7 — tests listing
 │   │   ├── test-editor.cy.ts                 # Service 7 — test case management
 │   │   ├── app-preview.cy.ts                 # Service 6 — Interactive app GUI
@@ -288,7 +291,10 @@ open-modeler-ts/
 │   │   │
 │   │   ├── layouts/                          # Page-level structural templates
 │   │   │   ├── landing-layout.tsx            # Multi-project management shell
-│   │   │   └── project-layout.tsx            # In-project navigation shell
+│   │   │   └── project-layout.tsx            # In-project navigation shell (includes Project Explorer)
+│   │   │
+│   │   ├── project-explorer/                 # Project Explorer sidebar (see PROJECT_EXPLORER_ARCH.md)
+│   │   │   └── project-explorer.tsx          # Categorized tree: Types, Library, Workbooks, Services
 │   │   │
 │   │   ├── nodes/                            # Custom ReactFlow node components (Service 5)
 │   │   │   ├── common/                       # Shared node chrome (ports, labels)
@@ -337,6 +343,7 @@ open-modeler-ts/
 │   │   ├── use-project.ts                    # Service 2 — single project state
 │   │   ├── use-project-assets.ts             # Service 2 — asset operations
 │   │   ├── use-project-types.ts              # Types Editor — types management hook
+│   │   ├── use-project-explorer.ts           # Project Explorer — tree categorization hook
 │   │   ├── use-flow-graph.ts                 # Service 5 — flow graph state & mutations
 │   │   ├── use-execution.ts                  # Service 6 — script execution
 │   │   ├── use-test-runner.ts                # Service 7 — test execution

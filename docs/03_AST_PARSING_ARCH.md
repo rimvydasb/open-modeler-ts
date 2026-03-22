@@ -92,8 +92,6 @@ classDiagram
     class ProjectAST {
         +projectMeta: ProjectMeta
         +declarations: Declaration[]
-        +rootFlowId: string | undefined
-        +modelType: "workbook" | "service"
         +errors: ParseDiagnostic[]
     }
 
@@ -285,7 +283,7 @@ The `@nodeType` JSDoc tag maps script declarations to visual node types in the f
  * - function  — A computation step rendered as a standard node.
  * - chart     — A visualization node that renders MUI X Charts output.
  * - table     — A visualization node that renders tabular output.
- * - flow      — A flow graph. If it is the root flow function, it defines the main canvas. Otherwise, it renders as a `<SubFlowNode>` containing its own nested graph.
+ * - flow      — A flow graph. Defines a ReactFlow canvas. The Project Explorer categorizes flows as Workbooks (no args) or Services (with args).
  * - list      — A data-shape node representing a collection type (e.g. an interface used as a list item).
  * - type      — A type declaration from `types.ts`, managed by the Types Editor. Not rendered in the flow graph.
  * - none      — An internal declaration (type, utility function) not visible in the flow graph.
@@ -576,10 +574,6 @@ interface ProjectAST {
     projectMeta: ProjectMeta;
     /** All top-level declarations found in the script. */
     declarations: Declaration[];
-    /** The declaration ID of the root flow function. */
-    rootFlowId?: string;
-    /** The execution model of the project, inferred from the root flow function. */
-    modelType: 'workbook' | 'service';
     /** Diagnostics emitted during parsing. */
     errors: ParseDiagnostic[];
 }
@@ -821,25 +815,9 @@ const projectAST: ProjectAST = {
             ],
         },
     ],
-    rootFlowId: 'main',
-    modelType: 'workbook',
     errors: [],
 };
 ```
-
-## Root Flow Detection Algorithm
-
-During AST construction, the parser determines the `rootFlowId` and `modelType` using the following algorithm:
-
-1. **Find all flow nodes:** Locate all declarations tagged with `@nodeType flow`.
-2. **Determine Root:**
-    - If a flow node is named `main`, it is designated as the root flow (`rootFlowId = 'main'`). All other flow nodes are treated as nested sub-flows.
-    - If there is no `main` function, but exactly _one_ flow node exists, that single node is designated as the root flow.
-    - If there are no flow nodes at all, but a `main` function exists (even without the `@nodeType flow` tag), `main` is designated as the root flow.
-    - If there is no `main` function and _multiple_ flow nodes exist, the parser throws an error (ambiguous entry point).
-3. **Determine Model Type:**
-    - If the root flow function has **no arguments**, `modelType` is set to `'workbook'`. This indicates a script that can be immediately executed (e.g., just paints graphs or runs a static pipeline).
-    - If the root flow function **has arguments**, `modelType` is set to `'service'`. This indicates a decision service that requires external input values to execute (e.g., via the Testing Service).
 
 ## Parser Components Architecture
 
@@ -910,9 +888,11 @@ The top-level orchestrator for the parsing pipeline.
  * Delegates to sub-components for JSDoc extraction, type resolution, and call analysis.
  * Stateless — produces a fresh ProjectAST on every invocation.
  *
- * MVP Limitation: Acts as a "Project Compiler" but currently only takes the FIRST asset
- * with `kind: 'source'` (or 'typescript') and ignores the rest. True multi-file module
- * resolution is deferred.
+ * Parses both `main.ts` (kind: 'source') and `types.ts` (kind: 'types') assets.
+ * Interfaces and type aliases from either file produce TypeDeclaration entries.
+ *
+ * MVP Limitation: Acts as a "Project Compiler" but currently only parses
+ * `main.ts` and `types.ts`. True multi-file module resolution is deferred.
  */
 function parseProject(assets: ProjectAsset[]): ProjectAST;
 ```
