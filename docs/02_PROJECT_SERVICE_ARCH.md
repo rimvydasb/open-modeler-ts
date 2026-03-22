@@ -3,7 +3,7 @@
 > **Service:** Project Management (Service 2)
 > **Testing:** Jest (`lib/project/`) | Cypress (`views/code-editor/`, `views/types-editor/`, `views/assets-browser/`)
 > **Depends on:** Projects Management (Service 1) for `StoredProject`, AST Parsing (Service 3) for metadata extraction,
-> Types Service (Service 4) for schema management, Storage Abstraction (`lib/storage/`)
+> Storage Abstraction (`lib/storage/`)
 > **Consumed by:** UI Layer (Code Editor, Types Editor, Assets Browser), Flow Modeling (Service 5), Execution Engine
 > (Service 6)
 > **Defined types:** `ProjectAsset`, `AssetKind`, `ProjectMeta`, `ImporterInterface`
@@ -12,7 +12,7 @@
 
 The Project Management service orchestrates operations on a **single open project**. It is the "work surface" between
 the workspace (Service 1, which manages the collection of projects) and the downstream consumers (AST Parsing,
-Types Registry, Flow Modeling, Execution Engine).
+Flow Modeling, Execution Engine).
 
 The service is divided into two primary sub-domains:
 
@@ -20,9 +20,10 @@ The service is divided into two primary sub-domains:
 - **Assets** — manages project files. Each asset has a `kind` discriminator (`source`, `types`, `json`, `csv`,
   `utility`, `service`) and a text-based `content` field. Format-specific importers handle parsing during file import.
 
-**Types Management Note:** Type extraction and schema registry logic have been moved to the **Types Service (Service 4)**. 
-Service 2 provides the raw asset content to Service 4 and receives the structured `ManagedType[]` for rendering in the 
-Types Editor view.
+**Types Management Note:** Type definitions are stored as a `types.ts` asset (with `kind: 'types'`) within the project.
+The AST Parsing Service (Service 3) parses this file and produces `TypeDeclaration[]`. The Types Editor view reads
+these declarations and writes changes back through `SourceMutator` (Service 3), with updated content saved here in
+Service 2.
 
 The `ProjectService` acts as a façade, exposing a unified API that coordinates the sub-services. Hooks
 (`use-project`, `use-project-assets`) bridge this service to the React UI layer.

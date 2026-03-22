@@ -3,8 +3,8 @@
 > **Service:** AST Parsing (Service 3)
 > **Testing:** Jest only — this service is strictly React-free
 > **Depends on:** Nothing (pure logic, no service dependencies)
-> **Consumed by:** Types Service (4), Flow Modeling (5), Execution Engine (6)
-> **Defined types:** `ProjectAST`, `Declaration`, `TypeReference`, `ParameterInfo`, `CallExpression`, `NodeType`
+> **Consumed by:** Types Editor (4), Flow Modeling (5), Execution Engine (6)
+> **Defined types:** `ProjectAST`, `Declaration`, `TypeReference`, `ParameterInfo`, `CallExpression`, `NodeType`, `TypeDeclaration`
 
 ## Overview
 
@@ -29,7 +29,7 @@ To correctly model the system, we strictly separate the compilation phase from t
 
 ### 1. Compilation & Transformation Pipeline (Data Flow)
 
-This pipeline focuses strictly on how data mutates when the user types code or edits the visual graph, aligning with the **Services Architecture**. The AST Parsing (Service 3) translates type signatures into port configurations for Types Service (Service 4), while simultaneously providing executable JS and input metadata to the Execution Engine (Service 6) host environment.
+This pipeline focuses strictly on how data mutates when the user types code or edits the visual graph, aligning with the **Services Architecture**. The AST Parsing (Service 3) provides type declarations to the Types Editor (Service 4 UI), translates function signatures into port configurations for Flow Modeling (Service 5), and provides executable JS and input metadata to the Execution Engine (Service 6) host environment.
 
 ```mermaid
 graph TB
@@ -39,6 +39,7 @@ graph TB
 
     subgraph UserInterface["User Interface Layer"]
         CE["Code Editor<br/>(Service 2)"]
+        TE["Types Editor<br/>(Service 4)"]
         FE["Flow Editor<br/>(Service 5)"]
     end
 
@@ -59,6 +60,9 @@ graph TB
     IDB -- " save / load " --> CE
     CE -- " TypeScript Source " --> TSM
     TSM -- " parses into " --> AST
+
+    AST -- " TypeDeclaration[] " --> TE
+    TE -- " mutations (round-trip) " --> AST
 
     AST -- " maps signatures to ports " --> FGB
     FGB -- " FlowGraph (Nodes & Edges) " --> FE
@@ -105,6 +109,7 @@ classDiagram
         ChartDeclaration
         TableDeclaration
         FlowDeclaration
+        TypeDeclaration
         DataDeclaration
         InternalDeclaration
     }
@@ -157,6 +162,12 @@ classDiagram
         +sourceKind: "interface" | "constant"
         +properties: PropertyInfo[]
         +typeAnnotation: TypeReference | undefined
+    }
+
+    class TypeDeclaration {
+        +nodeType: "type"
+        +sourceKind: "interface" | "type-alias"
+        +properties: PropertyInfo[]
     }
 
     class InternalDeclaration {
@@ -226,6 +237,7 @@ classDiagram
     DeclarationBase <|-- TableDeclaration
     DeclarationBase <|-- FlowDeclaration
     DeclarationBase <|-- DataDeclaration
+    DeclarationBase <|-- TypeDeclaration
     DeclarationBase <|-- InternalDeclaration
     FunctionDeclaration *-- ParameterInfo
     FunctionDeclaration *-- TypeReference
@@ -243,6 +255,7 @@ classDiagram
     FlowDeclaration *-- CallExpression
     DataDeclaration *-- PropertyInfo
     DataDeclaration *-- TypeReference
+    TypeDeclaration *-- PropertyInfo
     ParameterInfo *-- TypeReference
     PropertyInfo *-- TypeReference
     TypeReference *-- TypeReference: typeArguments
@@ -274,9 +287,10 @@ The `@nodeType` JSDoc tag maps script declarations to visual node types in the f
  * - table     — A visualization node that renders tabular output.
  * - flow      — A flow graph. If it is the root flow function, it defines the main canvas. Otherwise, it renders as a `<SubFlowNode>` containing its own nested graph.
  * - list      — A data-shape node representing a collection type (e.g. an interface used as a list item).
+ * - type      — A type declaration from `types.ts`, managed by the Types Editor. Not rendered in the flow graph.
  * - none      — An internal declaration (type, utility function) not visible in the flow graph.
  */
-type NodeType = 'function' | 'chart' | 'table' | 'flow' | 'list' | 'none';
+type NodeType = 'function' | 'chart' | 'table' | 'flow' | 'list' | 'type' | 'none';
 ```
 
 ### Component Configurations
@@ -507,6 +521,22 @@ interface DataDeclaration extends DeclarationBase {
 }
 ```
 
+### Type Declaration
+
+Represents a type definition from `types.ts` that is managed by the Types Editor. These declarations are parsed
+from the dedicated types asset and are not rendered in the flow graph. The Types Editor UI reads these declarations
+to present a structured editing interface.
+
+```typescript
+interface TypeDeclaration extends DeclarationBase {
+    nodeType: 'type';
+    /** Whether this was defined as an 'interface' or a 'type-alias' in source. */
+    sourceKind: 'interface' | 'type-alias';
+    /** Properties of the interface or type alias. */
+    properties: PropertyInfo[];
+}
+```
+
 ### Internal Declaration
 
 Represents non-visual declarations (`@nodeType none` or missing).
@@ -529,6 +559,7 @@ type Declaration =
     | ChartDeclaration
     | TableDeclaration
     | FlowDeclaration
+    | TypeDeclaration
     | DataDeclaration
     | InternalDeclaration;
 ```

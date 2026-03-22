@@ -2,8 +2,8 @@
 
 > **Service:** Execution Engine (Service 6)
 > **Testing:** Jest (`lib/engine/`) | Cypress (`views/app-preview/`)
-> **Depends on:** AST Parsing (Service 3 — see [03_AST_PARSING_ARCH.md](03_AST_PARSING_ARCH.md)) for transpilation,
-> Types Service (Service 4 — see [04_TYPES_SERVICE_ARCH.md](04_TYPES_SERVICE_ARCH.md)) for FFI marshalling
+> **Depends on:** AST Parsing (Service 3 — see [03_AST_PARSING_ARCH.md](03_AST_PARSING_ARCH.md)) for transpilation and
+> `TypeDeclaration` for FFI marshalling
 > **Consumed by:** Testing Service (7), UI Layer (App Preview View)
 > **Defined types:** `ExecutionResult`, `ExecutionContext`, `HookCallbacks`, `ChartConfig`, `AiRequestOptions`
 

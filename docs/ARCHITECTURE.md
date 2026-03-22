@@ -19,7 +19,7 @@ Project is in design phase.
 | [01_PROJECTS_SERVICE_ARCH.md](01_PROJECTS_SERVICE_ARCH.md)         | Projects Management (1) | Active |
 | [02_PROJECT_SERVICE_ARCH.md](02_PROJECT_SERVICE_ARCH.md)           | Project Management (2)  | Active |
 | [03_AST_PARSING_ARCH.md](03_AST_PARSING_ARCH.md)                   | AST Parsing (3)         | Active |
-| [04_TYPES_SERVICE_ARCH.md](04_TYPES_SERVICE_ARCH.md)               | Types Service (4)       | Active |
+| [04_TYPES_EDITOR_ARCH.md](04_TYPES_EDITOR_ARCH.md)               | Types Editor (4)        | Active |
 | [05_FLOW_MODELING_ARCH.md](05_FLOW_MODELING_ARCH.md)               | Flow Modeling (5)       | Active |
 | [06_EXECUTION_ENGINE_ARCH.md](06_EXECUTION_ENGINE_ARCH.md)         | Execution Engine (6)    | Active |
 | [07_TESTING_SERVICE_ARCH.md](07_TESTING_SERVICE_ARCH.md)           | Testing Service (7)     | Active |
@@ -240,7 +240,7 @@ open-modeler-ts/
 │   ├── 01_PROJECTS_SERVICE_ARCH.md           # Service 1: Workspace, Multi-project CRUD, IDB Storage
 │   ├── 02_PROJECT_SERVICE_ARCH.md            # Service 2: Single Project Metadata, Assets
 │   ├── 03_AST_PARSING_ARCH.md                # Service 3: ts-morph, Data Pipelines
-│   ├── 04_TYPES_SERVICE_ARCH.md              # Service 4: Type Registry, Schema Evolution, FFI Prep
+│   ├── 04_TYPES_EDITOR_ARCH.md              # Types Editor: GUI for type management via AST
 │   ├── 05_FLOW_MODELING_ARCH.md              # Service 5: ReactFlow, Sync, Layout Engine
 │   ├── 06_EXECUTION_ENGINE_ARCH.md           # Service 6: QuickJS Sandbox, FFI, Host Bridge hooks
 │   ├── 07_TESTING_SERVICE_ARCH.md            # Service 7: Execution orchestration, reporting
@@ -255,7 +255,7 @@ open-modeler-ts/
 │   │   ├── flow-editor.cy.ts                 # Service 5 — flow graph interaction
 │   │   ├── visual-editor.cy.ts               # Advanced context editor
 │   │   ├── code-editor.cy.ts                 # Service 3 — code editing round-trip
-│   │   ├── types.cy.ts                       # Service 4 — types management
+│   │   ├── types.cy.ts                       # Types Editor — types management GUI
 │   │   ├── tests-summary.cy.ts               # Service 7 — tests listing
 │   │   ├── test-editor.cy.ts                 # Service 7 — test case management
 │   │   ├── app-preview.cy.ts                 # Service 6 — Interactive app GUI
@@ -290,7 +290,7 @@ open-modeler-ts/
 │   │   │   ├── landing-layout.tsx            # Multi-project management shell
 │   │   │   └── project-layout.tsx            # In-project navigation shell
 │   │   │
-│   │   ├── nodes/                            # Custom ReactFlow node components (Service 4)
+│   │   ├── nodes/                            # Custom ReactFlow node components (Service 5)
 │   │   │   ├── common/                       # Shared node chrome (ports, labels)
 │   │   │   │   └── node-wrapper.tsx
 │   │   │   ├── function-node/
@@ -336,7 +336,7 @@ open-modeler-ts/
 │   │   ├── use-projects.ts                   # Service 1 — projects CRUD
 │   │   ├── use-project.ts                    # Service 2 — single project state
 │   │   ├── use-project-assets.ts             # Service 2 — asset operations
-│   │   ├── use-project-types.ts              # Service 4 — types management
+│   │   ├── use-project-types.ts              # Types Editor — types management hook
 │   │   ├── use-flow-graph.ts                 # Service 5 — flow graph state & mutations
 │   │   ├── use-execution.ts                  # Service 6 — script execution
 │   │   ├── use-test-runner.ts                # Service 7 — test execution
@@ -370,8 +370,7 @@ open-modeler-ts/
 │   │   │   │   └── metadata-types.ts         # ProjectMeta, UpdateMetadataInput
 │   │   │   ├── types-management/
 │   │   │   │   ├── types-extractor.ts        # Extract interfaces from source via AST service
-│   │   │   │   ├── types-service.ts          # Types CRUD, default types.ts creation
-│   │   │   │   └── types-management-types.ts # ManagedType, TypesConfig
+│   │   │   │   └── types-service.ts          # Types asset CRUD, default types.ts creation
 │   │   │   ├── assets/
 │   │   │   │   ├── assets-service.ts         # Asset CRUD (add, remove, rename, list)
 │   │   │   │   ├── assets-types.ts           # ProjectAsset, AssetKind (typescript | json | csv | utility | service)
@@ -419,16 +418,9 @@ open-modeler-ts/
 │   │   │       ├── transpiler.test.ts        # TS → valid JS assertions
 │   │   │       └── hook-rewriter.test.ts     # Import rewriting assertions
 │   │   │
-│   │   ├── types/                            # ── Service 4: Types Service ──
-│   │   │   ├── index.ts                      # Public API: TypeRegistry, TypesService
-│   │   │   ├── types-service.ts              # Reconciles AST → ManagedTypes
-│   │   │   ├── types-registry.ts             # System-wide type storage and resolution
-│   │   │   ├── schema-validator.ts           # Checks for circular deps/visual schema errors
-│   │   │   ├── types-types.ts                # ManagedType, PropertyInfo, SchemaSnapshot
-│   │   │   └── __tests__/
-│   │   │       ├── types-service.test.ts
-│   │   │       ├── types-registry.test.ts
-│   │   │       └── schema-validator.test.ts
+│   │   │   # Note: Types Editor (4) has no lib/ folder — it is a UI view that reads
+│   │   │   # TypeDeclaration[] from AST (Service 3) and writes via SourceMutator.
+│   │   │   # See: components/views/types-editor/ and hooks/use-project-types.ts
 │   │   │
 │   │   ├── flow/                             # ── Service 5: Flow Modeling ──
 │   │   │   ├── index.ts                      # Public API: buildFlowGraph, applyFlowMutations
@@ -617,7 +609,7 @@ swap to Git or file-based storage in the future, implement a new adapter — no 
 ### Service 2 — Project Management (`lib/project/`)
 
 > **Architecture document:** [02_PROJECT_SERVICE_ARCH.md](02_PROJECT_SERVICE_ARCH.md) — sub-service structural diagram, asset
-> import behavioral flow, ProjectAsset/AssetKind/ManagedType interfaces.
+> import behavioral flow, ProjectAsset/AssetKind interfaces.
 
 **Responsibility:** Operations on a single open project. Manages the three sub-domains: metadata, types, and assets.
 This service is the "work surface" that the project layout views interact with.
@@ -659,24 +651,25 @@ it with ts-morph. Future parsers (Python via Pyodide AST, JavaScript via lighter
 **AST types live here:** All types from `03_AST_PARSING_ARCH.md` (`ProjectAST`, `Declaration`, `TypeReference`, etc.) are
 defined in `ast/types/` and re-exported from `ast/index.ts`. Other services (Flow, Engine) import these types.
 
-**Frontend:** None. This service has no direct UI — it is consumed by Service 4 (types management), Service 5 (flow
+**Frontend:** None. This service has no direct UI — it is consumed by Types Editor (types management), Service 5 (flow
 graph building), and Service 6 (transpilation for execution).
 
 ---
 
-### Service 4 — Types Service (`lib/types/`)
+### Types Editor (`components/views/types-editor/` + `hooks/use-project-types.ts`)
 
-> **Architecture document:** [04_TYPES_SERVICE_ARCH.md](04_TYPES_SERVICE_ARCH.md) — ManagedType interfaces, TypeRegistry,
-> schema synchronization flow.
+> **Architecture document:** [04_TYPES_EDITOR_ARCH.md](04_TYPES_EDITOR_ARCH.md) — Types Editor view, useProjectTypes
+> hook, type editing workflow.
 
-**Responsibility:** The Sovereign Schema Registry. Elevates raw AST type declarations into a managed, system-wide
-schema. It handles cross-asset type resolution, maintains the living registry of project types, and notifies 
-downstream consumers when the schema evolves.
+**Responsibility:** GUI component for managing project type definitions. Lists all `TypeDeclaration` entries parsed
+from `types.ts` by AST Parsing (Service 3), and allows users to add, edit, and remove types and their properties
+through a structured visual interface — similar to FICO Business Terms Editor.
 
-**FFI Prep:** Provides the metadata required by Service 6 (Execution Engine) to properly marshal JSON data to 
-TypeScript shapes within the sandbox.
+**Not a lib-layer service:** Unlike Services 1–3 and 5–7, the Types Editor has no `lib/` folder. It reads
+`TypeDeclaration[]` from the `ProjectAST` and writes changes back through `SourceMutator` (Service 3) and
+`AssetsService` (Service 2). All type parsing logic lives in Service 3.
 
-**Frontend:** `views/types-editor/` — structured editor for data shapes and interfaces.
+**Frontend:** `views/types-editor/` — type listing, type forms, property editors. Tested with Cypress.
 
 ---
 
@@ -785,10 +778,10 @@ Services may only depend **downward and sideways within the lib/ layer**, never 
 | Projects (1) | Storage                                   |
 | Project (2)  | Storage, AST (3) for metadata extraction  |
 | AST (3)      | — (pure logic, no service dependencies)   |
-| Types (4)    | AST (3) for interface extraction          |
-| Flow (5)     | AST (3) for functions, Types (4) for ports |
-| Engine (6)   | AST (3) for transpilation, Types (4) for FFI |
-| Testing (7)  | Engine (6) for execution, Types (4) for validation |
+| Types Ed (4) | AST (3) for TypeDeclaration, Project (2) for types.ts persistence |
+| Flow (5)     | AST (3) for functions, AST (3) for type declarations |
+| Engine (6)   | AST (3) for transpilation, AST (3) for type info |
+| Testing (7)  | Engine (6) for execution, AST (3) for type validation |
 
 ## MVP Scope
 
@@ -803,8 +796,8 @@ that can be plugged in later without refactoring. Open Modeler will act purely a
 | ------------ | -------------------------------------------------------------------- |
 | Projects (1) | Full CRUD with IndexedDB. Asset-aware StoredProject type.            |
 | Project (2)  | Metadata CRUD. TypeScript source as primary asset. Basic asset list. |
-| AST (3)      | Full parsing pipeline (SourceParser + all sub-components).           |
-| Types (4)    | Unified TypeRegistry. Interface extraction to ManagedType.           |
+| AST (3)      | Full parsing pipeline (SourceParser + all sub-components). TypeDeclaration support. |
+| Types Ed (4) | Types Editor view with useProjectTypes hook. Add/edit/remove types via GUI. |
 | Flow (5)     | FlowGraphBuilder (AST → graph). Basic node components.               |
 | Engine (6)   | QuickJS sandbox lifecycle. Push hooks (chart, table, log).           |
 | Storage      | IndexedDB adapter with schema versioning.                            |
@@ -814,7 +807,7 @@ that can be plugged in later without refactoring. Open Modeler will act purely a
 | Service     | Scope                                                       |
 | ----------- | ----------------------------------------------------------- |
 | Project (2) | CSV/JSON importers. Utility and service asset kinds.        |
-| Types (4)   | Schema evolution events. Cross-asset type resolution.       |
+| Types Ed (4)| Schema validation warnings. Cross-type reference checks.    |
 | AST (3)     | SourceMutator (Visual Edits → Source string). HookRewriter. |
 | Flow (5)    | FlowGraphSync (mutations → SourceMutator). Layout engine.   |
 | Engine (6)  | Bidirectional hooks (ai, fetch). Security layer.            |
