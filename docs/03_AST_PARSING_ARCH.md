@@ -3,7 +3,7 @@
 > **Service:** AST Parsing (Service 3)
 > **Testing:** Jest only — this service is strictly React-free
 > **Depends on:** Nothing (pure logic, no service dependencies)
-> **Consumed by:** Project Management (2), Flow Modeling (4), Execution Engine (5)
+> **Consumed by:** Types Service (4), Flow Modeling (5), Execution Engine (6)
 > **Defined types:** `ProjectAST`, `Declaration`, `TypeReference`, `ParameterInfo`, `CallExpression`, `NodeType`
 
 ## Overview
@@ -15,12 +15,12 @@ source of truth for:
 - Extracting function signatures, types, and metadata from TypeScript source
 - Serializing AST changes back to TypeScript source (round-trip editing)
 - Transpiling TypeScript to QuickJS-ready JavaScript for execution
-- Providing type information to the Flow Modeling service (see [04_FLOW_MODELING_ARCH.md](04_FLOW_MODELING_ARCH.md))
+- Providing type information to the Flow Modeling service (see [05_FLOW_MODELING_ARCH.md](05_FLOW_MODELING_ARCH.md))
 
 This document specifies all TypeScript interfaces that compose the Project AST, the parsing pipeline components,
 and the hooks type system.
 
-> **Flow graph derivation, node components, and visual editing are defined in [04_FLOW_MODELING_ARCH.md](04_FLOW_MODELING_ARCH.md).**
+> **Flow graph derivation, node components, and visual editing are defined in [05_FLOW_MODELING_ARCH.md](05_FLOW_MODELING_ARCH.md).**
 > **Persistence model (StoredProject) is defined in [ARCHITECTURE.md](ARCHITECTURE.md) under Service 1.**
 
 ## Architectural Views
@@ -29,7 +29,7 @@ To correctly model the system, we strictly separate the compilation phase from t
 
 ### 1. Compilation & Transformation Pipeline (Data Flow)
 
-This pipeline focuses strictly on how data mutates when the user types code or edits the visual graph, aligning with the **Services Architecture**. The AST Parsing (Service 3) translates type signatures into port configurations for Flow Modeling (Service 4), while simultaneously providing executable JS and input metadata to the Execution Engine (Service 5) host environment.
+This pipeline focuses strictly on how data mutates when the user types code or edits the visual graph, aligning with the **Services Architecture**. The AST Parsing (Service 3) translates type signatures into port configurations for Types Service (Service 4), while simultaneously providing executable JS and input metadata to the Execution Engine (Service 6) host environment.
 
 ```mermaid
 graph TB
@@ -39,7 +39,7 @@ graph TB
 
     subgraph UserInterface["User Interface Layer (Cypress)"]
         CE["Code Editor<br/>(Service 2)"]
-        FE["Flow Editor<br/>(Service 4)"]
+        FE["Flow Editor<br/>(Service 5)"]
     end
 
     subgraph AnalysisLayer["AST Parsing Layer (Service 3)"]
@@ -48,11 +48,11 @@ graph TB
         TRANS["Transpiler"]
     end
 
-    subgraph FlowModelingLayer["Flow Modeling Layer (Service 4)"]
+    subgraph FlowModelingLayer["Flow Modeling Layer (Service 5)"]
         FGB["FlowGraph Builder"]
     end
 
-    subgraph ExecutionLayer["Execution Engine Layer (Service 5)"]
+    subgraph ExecutionLayer["Execution Engine Layer (Service 6)"]
         VM_PREP["Host Context Prep"]
     end
 
@@ -77,7 +77,7 @@ graph TB
 
 ### 2. Runtime Execution Architecture (Moved)
 
-> **Note:** The Runtime Execution Architecture (Host vs. Guest) model has been extracted and moved to its correct bounded context in **Service 5: Execution Engine**. See [05_EXECUTION_ENGINE_ARCH.md](05_EXECUTION_ENGINE_ARCH.md).
+> **Note:** The Runtime Execution Architecture (Host vs. Guest) model has been extracted and moved to its correct bounded context in **Service 6: Execution Engine**. See [06_EXECUTION_ENGINE_ARCH.md](06_EXECUTION_ENGINE_ARCH.md).
 
 ## AST Structural Diagram
 
@@ -860,14 +860,14 @@ graph LR
     style TranspilationPipeline fill: #fce4ec, stroke: #c62828
 ```
 
-> **Note:** The Flow Pipeline (AST ↔ ReactFlow) has been moved to Service 4 — see [04_FLOW_MODELING_ARCH.md](04_FLOW_MODELING_ARCH.md).
+> **Note:** The Flow Pipeline (AST ↔ ReactFlow) has been moved to Service 5 — see [05_FLOW_MODELING_ARCH.md](05_FLOW_MODELING_ARCH.md).
 
 ### Component Specifications
 
 Each component is a pure function or a stateless class. All live in `src/lib/ast/`.
 
-> **FlowGraphBuilder and FlowGraphSync** have been moved to `src/lib/flow/` (Service 4).
-> See [04_FLOW_MODELING_ARCH.md](04_FLOW_MODELING_ARCH.md) for their specifications.
+> **FlowGraphBuilder and FlowGraphSync** have been moved to `src/lib/flow/` (Service 5).
+> See [05_FLOW_MODELING_ARCH.md](05_FLOW_MODELING_ARCH.md) for their specifications.
 
 #### SourceParser
 

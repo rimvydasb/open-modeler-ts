@@ -1,8 +1,8 @@
-# Service 6: Testing Service — Architecture
+# Service 7: Testing Service — Architecture
 
-> **Service:** Testing Service (Service 6)
+> **Service:** Testing Service (Service 7)
 > **Testing:** Jest (`lib/testing/`) | Cypress (`views/tests-manager/`)
-> **Depends on:** Execution Engine (Service 5) for script execution, Storage Abstraction (`lib/storage/`)
+> **Depends on:** Execution Engine (Service 6) for script execution, Storage Abstraction (`lib/storage/`)
 > **Consumed by:** UI Layer (Tests Manager View)
 > **Defined types:** `TestCase`, `TestSuite`, `TestResult`, `TestReport`, `TestAssertion`
 
@@ -10,14 +10,14 @@
 
 The Testing Service manages the lifecycle of user-defined test cases: creation, execution, and reporting. Users
 define test cases with input data and a set of assertions. The service executes them through the Execution Engine
-(Service 5) and evaluates the actual results against these assertions.
+(Service 6) and evaluates the actual results against these assertions.
 
 A test case targets a specific function in the project's source code. The user provides input parameters and defines
 one or more assertions (deep equality, property matching, or type checks). The test runner batches test cases into 
 a `TestSuite`, executes each through the sandbox, and produces a `TestReport` with pass/fail status, execution times, 
 and diff output for failed assertions.
 
-This service does not parse or transpile code — it delegates execution entirely to Service 5. It also persists test
+This service does not parse or transpile code — it delegates execution entirely to Service 6. It also persists test
 cases as part of the project (via Service 1's `StoredProject` assets with `kind: 'test'`).
 
 ## Structural Diagram
@@ -108,7 +108,7 @@ classDiagram
 
     TestCaseService ..> TestSuite : manages
     TestRunner ..> TestResult : produces
-    TestRunner --> Service5 : executes via
+    TestRunner --> Service6 : executes via
     TestReporter ..> TestReport : generates
 ```
 
@@ -120,7 +120,7 @@ sequenceDiagram
     participant Hook as useTestRunner
     participant Svc as TestCaseService
     participant Runner as TestRunner
-    participant Engine as ExecutionEngine (Svc 5)
+    participant Engine as ExecutionEngine (Svc 6)
     participant Reporter as TestReporter
     participant IDB as StorageInterface
 
@@ -221,7 +221,7 @@ stored as a project asset with `kind: 'test'` in JSON format.
 
 ### TestRunner (`test-runner.ts`)
 
-Executes test cases through the Execution Engine (Service 5). For each test case, it:
+Executes test cases through the Execution Engine (Service 6). For each test case, it:
 
 1. Creates a sandbox via the engine
 2. Executes the target function with the test case inputs

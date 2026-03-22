@@ -1,11 +1,11 @@
-# Service 7: Deployment Service — Architecture (OUT OF SCOPE)
+# Service 8: Deployment Service — Architecture (OUT OF SCOPE)
 
 > 🚫 **OUT OF SCOPE FOR MVP**
 > The Open Modeler acts purely as a stand-alone IDE for the MVP release. This service, including environment variable management and deployment targeting, has been deferred. This document remains as a structural placeholder for future implementation.
 
-> **Service:** Deployment Service (Service 7)
+> **Service:** Deployment Service (Service 8)
 > **Testing:** Jest (`lib/deployment/`) | Cypress (`views/deploy-manager/`)
-> **Depends on:** Storage Abstraction (`lib/storage/`), Execution Engine (Service 5) for environment injection
+> **Depends on:** Storage Abstraction (`lib/storage/`), Execution Engine (Service 6) for environment injection
 > **Consumed by:** UI Layer (Deploy Manager View)
 > **Defined types:** `DeploymentConfig`, `DeploymentTarget`, `EnvironmentVariable`, `EnvironmentConfig`
 
@@ -16,7 +16,7 @@ The Deployment Service manages deployment targets and environment variables. For
 deferred to future releases.
 
 **MVP scope:** Environment variables management only. Users define key-value pairs per environment (`development`,
-`staging`, `production`) that are injected into the script execution context via Service 5. This allows scripts to
+`staging`, `production`) that are injected into the script execution context via Service 6. This allows scripts to
 reference configuration values (API keys, endpoint URLs) without hardcoding them.
 
 The deployment target system follows an adapter pattern: `target-interface.ts` defines the abstract contract for

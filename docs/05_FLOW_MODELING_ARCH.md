@@ -1,8 +1,8 @@
-# Service 4: Flow Modeling — Architecture
+# Service 5: Flow Modeling — Architecture
 
-> **Service:** Flow Modeling (Service 4)
+> **Service:** Flow Modeling (Service 5)
 > **Testing:** `lib/flow/` — Jest | `components/nodes/`, `components/views/flow-editor/` — Cypress
-> **Depends on:** AST Parsing (Service 3) for `ProjectAST` data structures
+> **Depends on:** AST Parsing (Service 3) for `ProjectAST` data structures, Types Service (Service 4) for port schema
 > **Consumed by:** UI Layer (Flow Editor View)
 > **Defined types:** `FlowGraph`, `FlowNode`, `FlowEdge`, `FlowMutation`
 

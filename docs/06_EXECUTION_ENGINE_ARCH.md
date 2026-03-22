@@ -1,9 +1,10 @@
-# Service 5: Execution Engine — Architecture
+# Service 6: Execution Engine — Architecture
 
-> **Service:** Execution Engine (Service 5)
+> **Service:** Execution Engine (Service 6)
 > **Testing:** Jest (`lib/engine/`) | Cypress (`views/app-preview/`)
-> **Depends on:** AST Parsing (Service 3 — see [03_AST_PARSING_ARCH.md](03_AST_PARSING_ARCH.md)) for transpilation
-> **Consumed by:** Testing Service (6), UI Layer (App Preview View)
+> **Depends on:** AST Parsing (Service 3 — see [03_AST_PARSING_ARCH.md](03_AST_PARSING_ARCH.md)) for transpilation,
+> Types Service (Service 4 — see [04_TYPES_SERVICE_ARCH.md](04_TYPES_SERVICE_ARCH.md)) for FFI marshalling
+> **Consumed by:** Testing Service (7), UI Layer (App Preview View)
 > **Defined types:** `ExecutionResult`, `ExecutionContext`, `HookCallbacks`, `ChartConfig`, `AiRequestOptions`
 
 ## Overview
@@ -29,7 +30,7 @@ This view focuses on the Host vs. Guest execution boundary, memory isolation, an
 
 ```mermaid
 graph TB
-    subgraph HostEnvironment["Host Environment (SPA) — Execution Engine (Service 5)"]
+    subgraph HostEnvironment["Host Environment (SPA) — Execution Engine (Service 6)"]
         ENG["Host Context & Input Prep"]
         HOOKS["Host Bridge<br/>(Hooks Implementation)"]
         AP["App Preview<br/>(React State)"]

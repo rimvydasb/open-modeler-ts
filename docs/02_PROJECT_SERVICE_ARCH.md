@@ -2,28 +2,30 @@
 
 > **Service:** Project Management (Service 2)
 > **Testing:** Jest (`lib/project/`) | Cypress (`views/code-editor/`, `views/types-editor/`, `views/assets-browser/`)
-> **Depends on:** Projects Management (Service 1) for `StoredProject`, AST Parsing (Service 3) for type extraction,
-> Storage Abstraction (`lib/storage/`)
-> **Consumed by:** UI Layer (Code Editor, Types Editor, Assets Browser), Flow Modeling (Service 4), Execution Engine
-> (Service 5)
-> **Defined types:** `ProjectAsset`, `AssetKind`, `ProjectMeta`, `ManagedType`, `ImporterInterface`
+> **Depends on:** Projects Management (Service 1) for `StoredProject`, AST Parsing (Service 3) for metadata extraction,
+> Types Service (Service 4) for schema management, Storage Abstraction (`lib/storage/`)
+> **Consumed by:** UI Layer (Code Editor, Types Editor, Assets Browser), Flow Modeling (Service 5), Execution Engine
+> (Service 6)
+> **Defined types:** `ProjectAsset`, `AssetKind`, `ProjectMeta`, `ImporterInterface`
 
 ## Overview
 
 The Project Management service orchestrates operations on a **single open project**. It is the "work surface" between
 the workspace (Service 1, which manages the collection of projects) and the downstream consumers (AST Parsing,
-Flow Modeling, Execution Engine).
+Types Registry, Flow Modeling, Execution Engine).
 
-The service is divided into three sub-domains, each with its own types and logic:
+The service is divided into two primary sub-domains:
 
 - **Metadata** — project name, description, tags, and timestamp management. Simple CRUD.
-- **Types Management** — extracts TypeScript interfaces from source files (delegating to Service 3's parser), provides
-  UI-editable representations, and manages the default `types.ts` asset.
 - **Assets** — manages project files. Each asset has a `kind` discriminator (`source`, `types`, `json`, `csv`,
   `utility`, `service`) and a text-based `content` field. Format-specific importers handle parsing during file import.
 
-The `ProjectService` acts as a façade, exposing a unified API that coordinates the three sub-services. Hooks
-(`use-project`, `use-project-assets`, `use-project-types`) bridge this service to the React UI layer.
+**Types Management Note:** Type extraction and schema registry logic have been moved to the **Types Service (Service 4)**. 
+Service 2 provides the raw asset content to Service 4 and receives the structured `ManagedType[]` for rendering in the 
+Types Editor view.
+
+The `ProjectService` acts as a façade, exposing a unified API that coordinates the sub-services. Hooks
+(`use-project`, `use-project-assets`) bridge this service to the React UI layer.
 
 ## Structural Diagram
 
@@ -36,7 +38,6 @@ classDiagram
         +saveProject() Result~void~
         +getMetadata() ProjectMeta
         +getAssets() ProjectAsset[]
-        +getManagedTypes() ManagedType[]
     }
 
     class MetadataService {
@@ -56,24 +57,6 @@ classDiagram
         +string? name
         +string? description
         +Record~string, string~? tags
-    }
-
-    class TypesService {
-        +extractTypes(source) ManagedType[]
-        +updateType(id, changes) ManagedType
-        +syncToAsset(types, project) ProjectAsset
-    }
-
-    class TypesExtractor {
-        +extract(source) ManagedType[]
-    }
-
-    class ManagedType {
-        +string id
-        +string name
-        +PropertyInfo[] properties
-        +string sourceAssetId
-        +boolean isEdited
     }
 
     class AssetsService {
@@ -121,15 +104,10 @@ classDiagram
     }
 
     ProjectService --> MetadataService : metadata ops
-    ProjectService --> TypesService : types ops
     ProjectService --> AssetsService : asset ops
 
     MetadataService ..> ProjectMeta : returns
     MetadataService ..> UpdateMetadataInput : accepts
-
-    TypesService --> TypesExtractor : delegates parsing
-    TypesExtractor ..> ManagedType : produces
-    TypesExtractor --> Service3 : calls parseProject()
 
     AssetsService --> AssetValidator : validates
     AssetsService --> ImporterInterface : delegates import
@@ -221,14 +199,6 @@ interface UpdateMetadataInput {
     tags?: Record<string, string>;
 }
 
-interface ManagedType {
-    id: string; // Derived from interface name
-    name: string; // Interface name (e.g. "LoanInput")
-    properties: PropertyInfo[]; // From AST parsing
-    sourceAssetId: string; // Which asset this type was extracted from
-    isEdited: boolean; // True if user has modified via Types Editor
-}
-
 interface ImporterInterface {
     canImport(filename: string): boolean;
     import(file: File | string): ProjectAsset;
@@ -239,7 +209,7 @@ interface ImporterInterface {
 
 ### ProjectService (`project-service.ts`)
 
-Façade that coordinates metadata, types, and assets sub-services. Provides a single entry point for hooks to
+Façade that coordinates metadata and assets sub-services. Provides a single entry point for hooks to
 interact with a currently open project. Manages the "save to Service 1" workflow.
 
 **Test strategy (Jest):** Mock sub-services, verify correct delegation and save coordination.
@@ -249,21 +219,6 @@ interact with a currently open project. Manages the "save to Service 1" workflow
 Reads and updates project metadata fields. Automatically manages `updatedAt` timestamps on any change.
 
 **Test strategy (Jest):** Pure functions — input/output pairs for metadata updates.
-
-### TypesExtractor (`types-management/types-extractor.ts`)
-
-Delegates to Service 3's `parseProject()` to extract `InterfaceDeclaration` entries from a source asset, then maps
-them to `ManagedType[]` for the Types Editor UI. This is the bridge between the AST world and the types
-management world.
-
-**Test strategy (Jest):** Mock Service 3 parser, verify correct extraction and mapping of interface declarations.
-
-### TypesService (`types-management/types-service.ts`)
-
-CRUD operations on managed types. Handles user edits from the Types Editor and syncs changes back to the `types.ts`
-asset content. Manages the creation of the default `types.ts` asset if it doesn't exist.
-
-**Test strategy (Jest):** Verify type sync produces valid TypeScript interface strings.
 
 ### AssetsService (`assets/assets-service.ts`)
 

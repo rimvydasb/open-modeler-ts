@@ -6,7 +6,7 @@ Project is in design phase.
 
 - Entry document: [ARCHITECTURE.md](ARCHITECTURE.md) — master overview, service map, and project structure.
 - All design documents reside in the `docs/` folder with the following naming conventions:
-    - `NN-SERVICE-NAME.md` — Numerically prefixed architecture documents defining the 7 core service bounded contexts.
+    - `NN_SERVICE_NAME_ARCH.md` — Numerically prefixed architecture documents defining the 8 core service bounded contexts.
     - `*_REQ.md` — High-level requirements used to design proper user stories. Added after architecture is stable.
     - `*_STORY.md` — Implementation stories that guide development of specific features or components.
     - `*_SPEC.md` — Completed stories appear as specifications that can be referenced by other stories or documents.
@@ -19,10 +19,11 @@ Project is in design phase.
 | [01_PROJECTS_SERVICE_ARCH.md](01_PROJECTS_SERVICE_ARCH.md)         | Projects Management (1) | Active |
 | [02_PROJECT_SERVICE_ARCH.md](02_PROJECT_SERVICE_ARCH.md)           | Project Management (2)  | Active |
 | [03_AST_PARSING_ARCH.md](03_AST_PARSING_ARCH.md)                   | AST Parsing (3)         | Active |
-| [04_FLOW_MODELING_ARCH.md](04_FLOW_MODELING_ARCH.md)               | Flow Modeling (4)       | Active |
-| [05_EXECUTION_ENGINE_ARCH.md](05_EXECUTION_ENGINE_ARCH.md)         | Execution Engine (5)    | Active |
-| [06_TESTING_SERVICE_ARCH.md](06_TESTING_SERVICE_ARCH.md)           | Testing Service (6)     | Active |
-| [07_DEPLOYMENT_SERVICE_ARCH.md](07_DEPLOYMENT_SERVICE_ARCH.md)     | Deployment Service (7)  | OUT OF SCOPE |
+| [04_TYPES_SERVICE_ARCH.md](04_TYPES_SERVICE_ARCH.md)               | Types Service (4)       | Active |
+| [05_FLOW_MODELING_ARCH.md](05_FLOW_MODELING_ARCH.md)               | Flow Modeling (5)       | Active |
+| [06_EXECUTION_ENGINE_ARCH.md](06_EXECUTION_ENGINE_ARCH.md)         | Execution Engine (6)    | Active |
+| [07_TESTING_SERVICE_ARCH.md](07_TESTING_SERVICE_ARCH.md)           | Testing Service (7)     | Active |
+| [08_DEPLOYMENT_SERVICE_ARCH.md](08_DEPLOYMENT_SERVICE_ARCH.md)     | Deployment Service (8)  | OUT OF SCOPE |
 | [examples/example-loan-return.ts](examples/example-loan-return.ts) | Reference example       | —      |
 
 ## Master Business Case
@@ -237,12 +238,13 @@ open-modeler-ts/
 ├── docs/                                     # Architecture & design documents
 │   ├── ARCHITECTURE.md                       # This document — master overview
 │   ├── 01_PROJECTS_SERVICE_ARCH.md           # Service 1: Workspace, Multi-project CRUD, IDB Storage
-│   ├── 02_PROJECT_SERVICE_ARCH.md            # Service 2: Single Project Metadata, Assets, Types Extractor
+│   ├── 02_PROJECT_SERVICE_ARCH.md            # Service 2: Single Project Metadata, Assets
 │   ├── 03_AST_PARSING_ARCH.md                # Service 3: ts-morph, Data Pipelines
-│   ├── 04_FLOW_MODELING_ARCH.md              # Service 4: ReactFlow, Sync, Layout Engine
-│   ├── 05_EXECUTION_ENGINE_ARCH.md           # Service 5: QuickJS Sandbox, FFI, Host Bridge hooks
-│   ├── 06_TESTING_SERVICE_ARCH.md            # Service 6: Execution orchestration, reporting
-│   ├── 07_DEPLOYMENT_SERVICE_ARCH.md         # Service 7: Target adapters, environment variables
+│   ├── 04_TYPES_SERVICE_ARCH.md              # Service 4: Type Registry, Schema Evolution, FFI Prep
+│   ├── 05_FLOW_MODELING_ARCH.md              # Service 5: ReactFlow, Sync, Layout Engine
+│   ├── 06_EXECUTION_ENGINE_ARCH.md           # Service 6: QuickJS Sandbox, FFI, Host Bridge hooks
+│   ├── 07_TESTING_SERVICE_ARCH.md            # Service 7: Execution orchestration, reporting
+│   ├── 08_DEPLOYMENT_SERVICE_ARCH.md         # Service 8: Target adapters, environment variables
 │   └── examples/
 │       └── example-loan-return.ts            # Reference example script
 │
@@ -250,14 +252,14 @@ open-modeler-ts/
 │   ├── e2e/
 │   │   ├── health.cy.ts                      # Critical: must pass before all others
 │   │   ├── landing.cy.ts                     # Landing view
-│   │   ├── flow-editor.cy.ts                 # Service 4 — flow graph interaction
+│   │   ├── flow-editor.cy.ts                 # Service 5 — flow graph interaction
 │   │   ├── visual-editor.cy.ts               # Advanced context editor
 │   │   ├── code-editor.cy.ts                 # Service 3 — code editing round-trip
-│   │   ├── types.cy.ts                       # Types management
-│   │   ├── tests-summary.cy.ts               # Service 6 — tests listing
-│   │   ├── test-editor.cy.ts                 # Service 6 — test case management
-│   │   ├── app-preview.cy.ts                 # Service 5 — Interactive app GUI
-│   │   └── deployment.cy.ts                  # Service 7 — deployment configuration
+│   │   ├── types.cy.ts                       # Service 4 — types management
+│   │   ├── tests-summary.cy.ts               # Service 7 — tests listing
+│   │   ├── test-editor.cy.ts                 # Service 7 — test case management
+│   │   ├── app-preview.cy.ts                 # Service 6 — Interactive app GUI
+│   │   └── deployment.cy.ts                  # Service 8 — deployment configuration
 │   ├── fixtures/                             # Test data (sample projects, scripts)
 │   └── support/                              # Cypress helpers, commands, IndexedDB cleanup
 │
@@ -334,12 +336,11 @@ open-modeler-ts/
 │   │   ├── use-projects.ts                   # Service 1 — projects CRUD
 │   │   ├── use-project.ts                    # Service 2 — single project state
 │   │   ├── use-project-assets.ts             # Service 2 — asset operations
-│   │   ├── use-project-types.ts              # Service 2 — types management
-│   │   ├── use-ast.ts                        # Service 3 — AST parsing trigger
-│   │   ├── use-flow-graph.ts                 # Service 4 — flow graph state & mutations
-│   │   ├── use-execution.ts                  # Service 5 — script execution
-│   │   ├── use-test-runner.ts                # Service 6 — test execution
-│   │   └── use-deployment.ts                 # Service 7 — deployment ops
+│   │   ├── use-project-types.ts              # Service 4 — types management
+│   │   ├── use-flow-graph.ts                 # Service 5 — flow graph state & mutations
+│   │   ├── use-execution.ts                  # Service 6 — script execution
+│   │   ├── use-test-runner.ts                # Service 7 — test execution
+│   │   └── use-deployment.ts                 # Service 8 — deployment ops
 │   │
 │   ├── providers/                            # React context providers
 │   │   ├── MuiProvider.tsx                   # Material UI theme provider
@@ -418,7 +419,18 @@ open-modeler-ts/
 │   │   │       ├── transpiler.test.ts        # TS → valid JS assertions
 │   │   │       └── hook-rewriter.test.ts     # Import rewriting assertions
 │   │   │
-│   │   ├── flow/                             # ── Service 4: Flow Modeling ──
+│   │   ├── types/                            # ── Service 4: Types Service ──
+│   │   │   ├── index.ts                      # Public API: TypeRegistry, TypesService
+│   │   │   ├── types-service.ts              # Reconciles AST → ManagedTypes
+│   │   │   ├── types-registry.ts             # System-wide type storage and resolution
+│   │   │   ├── schema-validator.ts           # Checks for circular deps/visual schema errors
+│   │   │   ├── types-types.ts                # ManagedType, PropertyInfo, SchemaSnapshot
+│   │   │   └── __tests__/
+│   │   │       ├── types-service.test.ts
+│   │   │       ├── types-registry.test.ts
+│   │   │       └── schema-validator.test.ts
+│   │   │
+│   │   ├── flow/                             # ── Service 5: Flow Modeling ──
 │   │   │   ├── index.ts                      # Public API: buildFlowGraph, applyFlowMutations
 │   │   │   ├── flow-graph-builder.ts         # AST → ReactFlow-compatible nodes & edges
 │   │   │   ├── flow-graph-sync.ts            # Flow mutations → AST updates (bidirectional)
@@ -429,7 +441,7 @@ open-modeler-ts/
 │   │   │       ├── flow-graph-sync.test.ts   # Mutation → AST change assertions
 │   │   │       └── flow-layout-engine.test.ts
 │   │   │
-│   │   ├── engine/                           # ── Service 5: Execution Engine ──
+│   │   ├── engine/                           # ── Service 6: Execution Engine ──
 │   │   │   ├── index.ts                      # Public API: createSandbox, executeSandbox, disposeSandbox
 │   │   │   ├── engines/
 │   │   │   │   ├── engine-interface.ts       # Abstract engine contract (for future Pyodide, etc.)
@@ -459,7 +471,7 @@ open-modeler-ts/
 │   │   │       ├── payload-limiter.test.ts
 │   │   │       └── execution-timeout.test.ts
 │   │   │
-│   │   ├── testing/                          # ── Service 6: Testing Service ──
+│   │   ├── testing/                          # ── Service 7: Testing Service ──
 │   │   │   ├── index.ts                      # Public API: createTestCase, runTests, getReport
 │   │   │   ├── test-case-service.ts          # Test case CRUD operations
 │   │   │   ├── test-runner.ts                # Test execution (calls Engine service)
@@ -470,7 +482,7 @@ open-modeler-ts/
 │   │   │       ├── test-runner.test.ts
 │   │   │       └── test-reporter.test.ts
 │   │   │
-│   │   ├── deployment/                       # ── Service 7: Deployment Service ──
+│   │   ├── deployment/                       # ── Service 8: Deployment Service ──
 │   │   │   ├── index.ts                      # Public API: deploy, getTargets, manageEnvironment
 │   │   │   ├── deployment-service.ts         # Deployment orchestration
 │   │   │   ├── deployment-types.ts           # DeploymentConfig, DeploymentTarget, DeploymentResult
@@ -647,30 +659,46 @@ it with ts-morph. Future parsers (Python via Pyodide AST, JavaScript via lighter
 **AST types live here:** All types from `03_AST_PARSING_ARCH.md` (`ProjectAST`, `Declaration`, `TypeReference`, etc.) are
 defined in `ast/types/` and re-exported from `ast/index.ts`. Other services (Flow, Engine) import these types.
 
-**Frontend:** None. This service has no direct UI — it is consumed by Service 2 (types extraction), Service 4 (flow
-graph building), and Service 5 (transpilation for execution).
+**Frontend:** None. This service has no direct UI — it is consumed by Service 4 (types management), Service 5 (flow
+graph building), and Service 6 (transpilation for execution).
 
 ---
 
-### Service 4 — Flow Modeling (`lib/flow/` + `components/nodes/` + `views/flow-editor/`)
+### Service 4 — Types Service (`lib/types/`)
 
-> **Architecture document:** [04_FLOW_MODELING_ARCH.md](04_FLOW_MODELING_ARCH.md) — node specifications, bidirectional flow,
+> **Architecture document:** [04_TYPES_SERVICE_ARCH.md](04_TYPES_SERVICE_ARCH.md) — ManagedType interfaces, TypeRegistry,
+> schema synchronization flow.
+
+**Responsibility:** The Sovereign Schema Registry. Elevates raw AST type declarations into a managed, system-wide
+schema. It handles cross-asset type resolution, maintains the living registry of project types, and notifies 
+downstream consumers when the schema evolves.
+
+**FFI Prep:** Provides the metadata required by Service 6 (Execution Engine) to properly marshal JSON data to 
+TypeScript shapes within the sandbox.
+
+**Frontend:** `views/types-editor/` — structured editor for data shapes and interfaces.
+
+---
+
+### Service 5 — Flow Modeling (`lib/flow/` + `components/nodes/` + `views/flow-editor/`)
+
+> **Architecture document:** [05_FLOW_MODELING_ARCH.md](05_FLOW_MODELING_ARCH.md) — node specifications, bidirectional flow,
 > FlowGraphBuilder/FlowGraphSync/FlowLayoutEngine interfaces.
 
 **Responsibility:** The visual layer. Transforms `ProjectAST` (from Service 3) into ReactFlow-compatible graphs and
 handles the reverse — applying visual editor mutations back to the AST. It also manages **Reactive Nodes** (charts and tables) that subscribe to real-time data pushes from the Execution Engine.
 
 **This service has two distinct layers with different testing strategies:** pure data transformation in `lib/flow/`
-(Jest-tested) and React node components + editor view in `components/` (Cypress-tested). See 04_FLOW_MODELING_ARCH.md for
+(Jest-tested) and React node components + editor view in `components/` (Cypress-tested). See 05_FLOW_MODELING_ARCH.md for
 node type definitions, component paths, and the bidirectional synchronization flow.
 
 **Frontend:** `views/flow-editor/` — the ReactFlow canvas, toolbar, and sidebar.
 
 ---
 
-### Service 5 — Execution Engine (`lib/engine/`)
+### Service 6 — Execution Engine (`lib/engine/`)
 
-> **Architecture document:** [05_EXECUTION_ENGINE_ARCH.md](05_EXECUTION_ENGINE_ARCH.md) — Host/Guest structural diagram,
+> **Architecture document:** [06_EXECUTION_ENGINE_ARCH.md](06_EXECUTION_ENGINE_ARCH.md) — Host/Guest structural diagram,
 > execution lifecycle sequence, EngineInterface/HookCallbacks/ExecutionResult interfaces.
 
 **Responsibility:** Secure script execution in a sandboxed VM. Manages the full lifecycle: sandbox creation → hook
@@ -685,21 +713,21 @@ Future engines (Pyodide for Python, Deno for enhanced JS) implement the same int
 
 ---
 
-### Service 6 — Testing Service (`lib/testing/`)
+### Service 7 — Testing Service (`lib/testing/`)
 
-> **Architecture document:** [06_TESTING_SERVICE_ARCH.md](06_TESTING_SERVICE_ARCH.md) — TestCase/TestSuite structural diagram,
+> **Architecture document:** [07_TESTING_SERVICE_ARCH.md](07_TESTING_SERVICE_ARCH.md) — TestCase/TestSuite structural diagram,
 > test execution behavioral flow, TestAssertion type definition.
 
 **Responsibility:** Test case lifecycle management. Users define test cases with input data and expected outputs.
-The runner executes them through the Execution Engine (Service 5) and reports results.
+The runner executes them through the Execution Engine (Service 6) and reports results.
 
 **Frontend:** `views/tests-manager/` — test case editor, execution controls, results panel.
 
 ---
 
-### Service 7 — Deployment Service (`lib/deployment/`)
+### Service 8 — Deployment Service (`lib/deployment/`)
 
-> **Architecture document:** [07_DEPLOYMENT_SERVICE_ARCH.md](07_DEPLOYMENT_SERVICE_ARCH.md) — DeploymentTarget/EnvironmentConfig
+> **Architecture document:** [08_DEPLOYMENT_SERVICE_ARCH.md](08_DEPLOYMENT_SERVICE_ARCH.md) — DeploymentTarget/EnvironmentConfig
 > structural diagram, deployment behavioral flow, environment variable interfaces.
 
 **Responsibility:** Manages deployment targets and environment variables. This service is mostly a **skeleton for MVP**
@@ -752,14 +780,15 @@ interface AppError {
 
 Services may only depend **downward and sideways within the lib/ layer**, never upward into hooks or components:
 
-| Service      | May depend on                           |
-| ------------ | --------------------------------------- |
-| Projects (1) | Storage                                 |
-| Project (2)  | Storage, AST (3) for type extraction    |
-| AST (3)      | — (pure logic, no service dependencies) |
-| Flow (4)     | AST (3) for ProjectAST types            |
-| Engine (5)   | AST (3) for transpilation               |
-| Testing (6)  | Engine (5) for execution                |
+| Service      | May depend on                             |
+| ------------ | ----------------------------------------- |
+| Projects (1) | Storage                                   |
+| Project (2)  | Storage, AST (3) for metadata extraction  |
+| AST (3)      | — (pure logic, no service dependencies)   |
+| Types (4)    | AST (3) for interface extraction          |
+| Flow (5)     | AST (3) for functions, Types (4) for ports |
+| Engine (6)   | AST (3) for transpilation, Types (4) for FFI |
+| Testing (7)  | Engine (6) for execution, Types (4) for validation |
 
 ## MVP Scope
 
@@ -775,8 +804,9 @@ that can be plugged in later without refactoring. Open Modeler will act purely a
 | Projects (1) | Full CRUD with IndexedDB. Asset-aware StoredProject type.            |
 | Project (2)  | Metadata CRUD. TypeScript source as primary asset. Basic asset list. |
 | AST (3)      | Full parsing pipeline (SourceParser + all sub-components).           |
-| Flow (4)     | FlowGraphBuilder (AST → graph). Basic node components.               |
-| Engine (5)   | QuickJS sandbox lifecycle. Push hooks (chart, table, log).           |
+| Types (4)    | Unified TypeRegistry. Interface extraction to ManagedType.           |
+| Flow (5)     | FlowGraphBuilder (AST → graph). Basic node components.               |
+| Engine (6)   | QuickJS sandbox lifecycle. Push hooks (chart, table, log).           |
 | Storage      | IndexedDB adapter with schema versioning.                            |
 
 ### Post-MVP (Interfaces Ready, Implementation Deferred)
@@ -784,10 +814,11 @@ that can be plugged in later without refactoring. Open Modeler will act purely a
 | Service     | Scope                                                       |
 | ----------- | ----------------------------------------------------------- |
 | Project (2) | CSV/JSON importers. Utility and service asset kinds.        |
+| Types (4)   | Schema evolution events. Cross-asset type resolution.       |
 | AST (3)     | SourceMutator (Visual Edits → Source string). HookRewriter. |
-| Flow (4)    | FlowGraphSync (mutations → SourceMutator). Layout engine.   |
-| Engine (5)  | Bidirectional hooks (ai, fetch). Security layer.            |
-| Testing (6) | Test case CRUD. Simple assertion runner.                    |
+| Flow (5)    | FlowGraphSync (mutations → SourceMutator). Layout engine.   |
+| Engine (6)  | Bidirectional hooks (ai, fetch). Security layer.            |
+| Testing (7) | Test case CRUD. Simple assertion runner.                    |
 
 ### Future (Not Started)
 
@@ -795,9 +826,9 @@ that can be plugged in later without refactoring. Open Modeler will act purely a
 | ------------------------ | -------------- |
 | Git storage adapter      | Storage        |
 | Python parser (Pyodide)  | AST (3)        |
-| Pyodide execution engine | Engine (5)     |
-| Vercel deployment target | Deployment (7) |
-| AWS Lambda target        | Deployment (7) |
+| Pyodide execution engine | Engine (6)     |
+| Vercel deployment target | Deployment (8) |
+| AWS Lambda target        | Deployment (8) |
 
 ## Architect Review — MVP Risks & Open Questions
 
