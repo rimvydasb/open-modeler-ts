@@ -53,12 +53,11 @@ graph TB
     TEV --> TF
     TF --> PF
     TEV --> UPT
-    UPT -- "reads TypeDeclaration[]" --> SP
-    UPT -- "applies type mutations" --> SM
-    SM -- "updated types.ts content" --> AS
-    AS -- "persists" --> IDB
-    IDB -- "loads types.ts" --> SP
-
+    UPT -- " reads TypeDeclaration[] " --> SP
+    UPT -- " applies type mutations " --> SM
+    SM -- " updated types.ts content " --> AS
+    AS -- " persists " --> IDB
+    IDB -- " loads types.ts " --> SP
     style UI fill: #e3f2fd, stroke: #1565c0
     style Hooks fill: #e8eaf6, stroke: #283593
     style AST fill: #fff3e0, stroke: #e65100
@@ -77,7 +76,6 @@ sequenceDiagram
     participant MUT as SourceMutator (Svc 3)
     participant Svc2 as Project Service (Svc 2)
     participant IDB as IndexedDB
-
     Note over User, IDB: Read Types
     User ->> TE: open /#types/:projectId
     TE ->> Hook: load types
@@ -87,7 +85,6 @@ sequenceDiagram
     AST -->> Hook: ProjectAST with TypeDeclaration[]
     Hook -->> TE: TypeDeclaration[]
     TE -->> User: render type list with properties
-
     Note over User, IDB: Edit Type
     User ->> TE: add property "email: string" to Customer
     TE ->> Hook: addProperty("Customer", { name: "email", type: "string" })
@@ -101,7 +98,6 @@ sequenceDiagram
     AST -->> Hook: refreshed TypeDeclaration[]
     Hook -->> TE: updated type list
     TE -->> User: reflect changes
-
     Note over User, IDB: Create New Type
     User ->> TE: click "Add Type"
     TE ->> Hook: addType("OrderLine", [])
@@ -195,6 +191,7 @@ function useProjectTypes(projectId: string): UseProjectTypesReturn;
 ```
 
 **Implementation pattern:**
+
 1. Load `types.ts` content from Service 2
 2. Parse via `parseProject()` from Service 3 to get `TypeDeclaration[]`
 3. On mutation, construct the appropriate `FlowMutation`, apply via `SourceMutator`
@@ -203,12 +200,12 @@ function useProjectTypes(projectId: string): UseProjectTypesReturn;
 
 ## Clean Architecture: Separation of Concerns
 
-| Layer | Responsibility | Location |
-| :---- | :------------- | :------- |
-| **AST Parsing (Service 3)** | Parse `types.ts` → `TypeDeclaration[]`. Apply mutations via `SourceMutator`. | `src/lib/ast/` |
-| **Project Management (Service 2)** | Load/save `types.ts` asset content from/to IndexedDB. | `src/lib/project/` |
-| **Hook (`useProjectTypes`)** | Orchestrate read/write cycle between UI and services. | `src/hooks/` |
-| **Types Editor (View)** | Present types in an editable GUI. Capture user intent. | `src/components/views/types-editor/` |
+| Layer                              | Responsibility                                                               | Location                             |
+|:-----------------------------------|:-----------------------------------------------------------------------------|:-------------------------------------|
+| **AST Parsing (Service 3)**        | Parse `types.ts` → `TypeDeclaration[]`. Apply mutations via `SourceMutator`. | `src/lib/ast/`                       |
+| **Project Management (Service 2)** | Load/save `types.ts` asset content from/to IndexedDB.                        | `src/lib/project/`                   |
+| **Hook (`useProjectTypes`)**       | Orchestrate read/write cycle between UI and services.                        | `src/hooks/`                         |
+| **Types Editor (View)**            | Present types in an editable GUI. Capture user intent.                       | `src/components/views/types-editor/` |
 
 > For the `TypeDeclaration` interface definition, see
 > [03_AST_PARSING_ARCH.md — Type Declaration](03_AST_PARSING_ARCH.md#type-declaration).
