@@ -15,12 +15,12 @@ source of truth for:
 - Extracting function signatures, types, and metadata from TypeScript source
 - Serializing AST changes back to TypeScript source (round-trip editing)
 - Transpiling TypeScript to QuickJS-ready JavaScript for execution
-- Providing type information to the Flow Modeling service (see [04-FLOW-MODELING.md](04-FLOW-MODELING.md))
+- Providing type information to the Flow Modeling service (see [04_FLOW_MODELING_ARCH.md](04_FLOW_MODELING_ARCH.md))
 
 This document specifies all TypeScript interfaces that compose the Project AST, the parsing pipeline components,
 and the hooks type system.
 
-> **Flow graph derivation, node components, and visual editing are defined in [04-FLOW-MODELING.md](04-FLOW-MODELING.md).**
+> **Flow graph derivation, node components, and visual editing are defined in [04_FLOW_MODELING_ARCH.md](04_FLOW_MODELING_ARCH.md).**
 > **Persistence model (StoredProject) is defined in [ARCHITECTURE.md](ARCHITECTURE.md) under Service 1.**
 
 ## Architectural Views
@@ -77,7 +77,7 @@ graph TB
 
 ### 2. Runtime Execution Architecture (Moved)
 
-> **Note:** The Runtime Execution Architecture (Host vs. Guest) model has been extracted and moved to its correct bounded context in **Service 5: Execution Engine**. See [05-EXECUTION-ENGINE.md](05-EXECUTION-ENGINE.md).
+> **Note:** The Runtime Execution Architecture (Host vs. Guest) model has been extracted and moved to its correct bounded context in **Service 5: Execution Engine**. See [05_EXECUTION_ENGINE_ARCH.md](05_EXECUTION_ENGINE_ARCH.md).
 
 ## AST Structural Diagram
 
@@ -860,14 +860,14 @@ graph LR
     style TranspilationPipeline fill: #fce4ec, stroke: #c62828
 ```
 
-> **Note:** The Flow Pipeline (AST ↔ ReactFlow) has been moved to Service 4 — see [04-FLOW-MODELING.md](04-FLOW-MODELING.md).
+> **Note:** The Flow Pipeline (AST ↔ ReactFlow) has been moved to Service 4 — see [04_FLOW_MODELING_ARCH.md](04_FLOW_MODELING_ARCH.md).
 
 ### Component Specifications
 
 Each component is a pure function or a stateless class. All live in `src/lib/ast/`.
 
 > **FlowGraphBuilder and FlowGraphSync** have been moved to `src/lib/flow/` (Service 4).
-> See [04-FLOW-MODELING.md](04-FLOW-MODELING.md) for their specifications.
+> See [04_FLOW_MODELING_ARCH.md](04_FLOW_MODELING_ARCH.md) for their specifications.
 
 #### SourceParser
 

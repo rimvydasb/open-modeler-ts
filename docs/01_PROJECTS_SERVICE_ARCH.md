@@ -94,7 +94,7 @@ classDiagram
     StoredProject *-- "0..*" ProjectAssetMeta : contains
 ```
 
-> `ProjectAsset` (content) and `ProjectAssetMeta` are defined in [02-PROJECT-SERVICE.md](02-PROJECT-SERVICE.md).
+> `ProjectAsset` (content) and `ProjectAssetMeta` are defined in [02_PROJECT_SERVICE_ARCH.md](02_PROJECT_SERVICE_ARCH.md).
 
 ## Behavioral Diagram
 

@@ -16,13 +16,13 @@ Project is in design phase.
 | Document                                                           | Service                 | Status |
 | ------------------------------------------------------------------ | ----------------------- | ------ |
 | [ARCHITECTURE.md](ARCHITECTURE.md)                                 | All — master overview   | Active |
-| [01-PROJECTS-SERVICE.md](01-PROJECTS-SERVICE.md)                   | Projects Management (1) | Active |
-| [02-PROJECT-SERVICE.md](02-PROJECT-SERVICE.md)                     | Project Management (2)  | Active |
-| [03-AST-PARSING.md](03-AST-PARSING.md)                             | AST Parsing (3)         | Active |
-| [04-FLOW-MODELING.md](04-FLOW-MODELING.md)                         | Flow Modeling (4)       | Active |
-| [05-EXECUTION-ENGINE.md](05-EXECUTION-ENGINE.md)                   | Execution Engine (5)    | Active |
-| [06-TESTING-SERVICE.md](06-TESTING-SERVICE.md)                     | Testing Service (6)     | Active |
-| [07-DEPLOYMENT-SERVICE.md](07-DEPLOYMENT-SERVICE.md)               | Deployment Service (7)  | OUT OF SCOPE |
+| [01_PROJECTS_SERVICE_ARCH.md](01_PROJECTS_SERVICE_ARCH.md)         | Projects Management (1) | Active |
+| [02_PROJECT_SERVICE_ARCH.md](02_PROJECT_SERVICE_ARCH.md)           | Project Management (2)  | Active |
+| [03_AST_PARSING_ARCH.md](03_AST_PARSING_ARCH.md)                   | AST Parsing (3)         | Active |
+| [04_FLOW_MODELING_ARCH.md](04_FLOW_MODELING_ARCH.md)               | Flow Modeling (4)       | Active |
+| [05_EXECUTION_ENGINE_ARCH.md](05_EXECUTION_ENGINE_ARCH.md)         | Execution Engine (5)    | Active |
+| [06_TESTING_SERVICE_ARCH.md](06_TESTING_SERVICE_ARCH.md)           | Testing Service (6)     | Active |
+| [07_DEPLOYMENT_SERVICE_ARCH.md](07_DEPLOYMENT_SERVICE_ARCH.md)     | Deployment Service (7)  | OUT OF SCOPE |
 | [examples/example-loan-return.ts](examples/example-loan-return.ts) | Reference example       | —      |
 
 ## Master Business Case
@@ -236,13 +236,13 @@ build tooling overhead, which is the right trade-off for a browser-only SPA at t
 open-modeler-ts/
 ├── docs/                                     # Architecture & design documents
 │   ├── ARCHITECTURE.md                       # This document — master overview
-│   ├── 01-PROJECTS-SERVICE.md                # Service 1: Workspace, Multi-project CRUD, IDB Storage
-│   ├── 02-PROJECT-SERVICE.md                 # Service 2: Single Project Metadata, Assets, Types Extractor
-│   ├── 03-AST-PARSING.md                     # Service 3: ts-morph, Data Pipelines (formerly 03-AST-PARSING.md)
-│   ├── 04-FLOW-MODELING.md                   # Service 4: ReactFlow, Sync, Layout Engine (formerly 04-FLOW-MODELING.md)
-│   ├── 05-EXECUTION-ENGINE.md                # Service 5: QuickJS Sandbox, FFI, Host Bridge hooks
-│   ├── 06-TESTING-SERVICE.md                 # Service 6: Execution orchestration, reporting
-│   ├── 07-DEPLOYMENT-SERVICE.md              # Service 7: Target adapters, environment variables
+│   ├── 01_PROJECTS_SERVICE_ARCH.md           # Service 1: Workspace, Multi-project CRUD, IDB Storage
+│   ├── 02_PROJECT_SERVICE_ARCH.md            # Service 2: Single Project Metadata, Assets, Types Extractor
+│   ├── 03_AST_PARSING_ARCH.md                # Service 3: ts-morph, Data Pipelines
+│   ├── 04_FLOW_MODELING_ARCH.md              # Service 4: ReactFlow, Sync, Layout Engine
+│   ├── 05_EXECUTION_ENGINE_ARCH.md           # Service 5: QuickJS Sandbox, FFI, Host Bridge hooks
+│   ├── 06_TESTING_SERVICE_ARCH.md            # Service 6: Execution orchestration, reporting
+│   ├── 07_DEPLOYMENT_SERVICE_ARCH.md         # Service 7: Target adapters, environment variables
 │   └── examples/
 │       └── example-loan-return.ts            # Reference example script
 │
@@ -588,7 +588,7 @@ graph TD
 
 ### Service 1 — Projects Management (`lib/projects/`)
 
-> **Architecture document:** [01-PROJECTS-SERVICE.md](01-PROJECTS-SERVICE.md) — structural diagram, CRUD behavioral
+> **Architecture document:** [01_PROJECTS_SERVICE_ARCH.md](01_PROJECTS_SERVICE_ARCH.md) — structural diagram, CRUD behavioral
 > flow, StoredProject/ProjectListItem interfaces.
 
 **Responsibility:** Multi-project CRUD operations. Defines the project BOM (Bill of Materials) — the canonical type
@@ -604,7 +604,7 @@ swap to Git or file-based storage in the future, implement a new adapter — no 
 
 ### Service 2 — Project Management (`lib/project/`)
 
-> **Architecture document:** [02-PROJECT-SERVICE.md](02-PROJECT-SERVICE.md) — sub-service structural diagram, asset
+> **Architecture document:** [02_PROJECT_SERVICE_ARCH.md](02_PROJECT_SERVICE_ARCH.md) — sub-service structural diagram, asset
 > import behavioral flow, ProjectAsset/AssetKind/ManagedType interfaces.
 
 **Responsibility:** Operations on a single open project. Manages the three sub-domains: metadata, types, and assets.
@@ -616,7 +616,7 @@ This service is the "work surface" that the project layout views interact with.
 - **Types Management** (`types-management/`) — extracts TypeScript interfaces from source files (delegates to
   Service 3's parser), provides UI-editable representations, manages the default `types.ts` asset.
 - **Assets** (`assets/`) — project file management with format-specific importers. See
-  [02-PROJECT-SERVICE.md](02-PROJECT-SERVICE.md) for `ProjectAsset`, `AssetKind`, and importer interfaces.
+  [02_PROJECT_SERVICE_ARCH.md](02_PROJECT_SERVICE_ARCH.md) for `ProjectAsset`, `AssetKind`, and importer interfaces.
 
 **Frontend:** `views/code-editor/`, `views/types-editor/`, `views/assets-browser/`.
 
@@ -624,7 +624,7 @@ This service is the "work surface" that the project layout views interact with.
 
 ### Service 3 — AST Parsing (`lib/ast/`)
 
-> **Architecture document:** [03-AST-PARSING.md](03-AST-PARSING.md)
+> **Architecture document:** [03_AST_PARSING_ARCH.md](03_AST_PARSING_ARCH.md)
 
 **Responsibility:** Pure data transformation service. Takes TypeScript source strings and produces `ProjectAST` data
 structures. It extracts function signatures, type definitions, and visual node configurations from JSDoc. It also handles the reverse path (SourceMutator) and transpilation to QuickJS-ready JavaScript.
@@ -644,7 +644,7 @@ a `chart`, or a `table`, and parsing their specific metadata (e.g. chart axis ma
 **Parser extensibility:** `parser-interface.ts` defines the abstract contract. The `typescript/` directory implements
 it with ts-morph. Future parsers (Python via Pyodide AST, JavaScript via lighter tools) implement the same interface.
 
-**AST types live here:** All types from `03-AST-PARSING.md` (`ProjectAST`, `Declaration`, `TypeReference`, etc.) are
+**AST types live here:** All types from `03_AST_PARSING_ARCH.md` (`ProjectAST`, `Declaration`, `TypeReference`, etc.) are
 defined in `ast/types/` and re-exported from `ast/index.ts`. Other services (Flow, Engine) import these types.
 
 **Frontend:** None. This service has no direct UI — it is consumed by Service 2 (types extraction), Service 4 (flow
@@ -654,14 +654,14 @@ graph building), and Service 5 (transpilation for execution).
 
 ### Service 4 — Flow Modeling (`lib/flow/` + `components/nodes/` + `views/flow-editor/`)
 
-> **Architecture document:** [04-FLOW-MODELING.md](04-FLOW-MODELING.md) — node specifications, bidirectional flow,
+> **Architecture document:** [04_FLOW_MODELING_ARCH.md](04_FLOW_MODELING_ARCH.md) — node specifications, bidirectional flow,
 > FlowGraphBuilder/FlowGraphSync/FlowLayoutEngine interfaces.
 
 **Responsibility:** The visual layer. Transforms `ProjectAST` (from Service 3) into ReactFlow-compatible graphs and
 handles the reverse — applying visual editor mutations back to the AST. It also manages **Reactive Nodes** (charts and tables) that subscribe to real-time data pushes from the Execution Engine.
 
 **This service has two distinct layers with different testing strategies:** pure data transformation in `lib/flow/`
-(Jest-tested) and React node components + editor view in `components/` (Cypress-tested). See 04-FLOW-MODELING.md for
+(Jest-tested) and React node components + editor view in `components/` (Cypress-tested). See 04_FLOW_MODELING_ARCH.md for
 node type definitions, component paths, and the bidirectional synchronization flow.
 
 **Frontend:** `views/flow-editor/` — the ReactFlow canvas, toolbar, and sidebar.
@@ -670,7 +670,7 @@ node type definitions, component paths, and the bidirectional synchronization fl
 
 ### Service 5 — Execution Engine (`lib/engine/`)
 
-> **Architecture document:** [05-EXECUTION-ENGINE.md](05-EXECUTION-ENGINE.md) — Host/Guest structural diagram,
+> **Architecture document:** [05_EXECUTION_ENGINE_ARCH.md](05_EXECUTION_ENGINE_ARCH.md) — Host/Guest structural diagram,
 > execution lifecycle sequence, EngineInterface/HookCallbacks/ExecutionResult interfaces.
 
 **Responsibility:** Secure script execution in a sandboxed VM. Manages the full lifecycle: sandbox creation → hook
@@ -687,7 +687,7 @@ Future engines (Pyodide for Python, Deno for enhanced JS) implement the same int
 
 ### Service 6 — Testing Service (`lib/testing/`)
 
-> **Architecture document:** [06-TESTING-SERVICE.md](06-TESTING-SERVICE.md) — TestCase/TestSuite structural diagram,
+> **Architecture document:** [06_TESTING_SERVICE_ARCH.md](06_TESTING_SERVICE_ARCH.md) — TestCase/TestSuite structural diagram,
 > test execution behavioral flow, TestAssertion type definition.
 
 **Responsibility:** Test case lifecycle management. Users define test cases with input data and expected outputs.
@@ -699,7 +699,7 @@ The runner executes them through the Execution Engine (Service 5) and reports re
 
 ### Service 7 — Deployment Service (`lib/deployment/`)
 
-> **Architecture document:** [07-DEPLOYMENT-SERVICE.md](07-DEPLOYMENT-SERVICE.md) — DeploymentTarget/EnvironmentConfig
+> **Architecture document:** [07_DEPLOYMENT_SERVICE_ARCH.md](07_DEPLOYMENT_SERVICE_ARCH.md) — DeploymentTarget/EnvironmentConfig
 > structural diagram, deployment behavioral flow, environment variable interfaces.
 
 **Responsibility:** Manages deployment targets and environment variables. This service is mostly a **skeleton for MVP**

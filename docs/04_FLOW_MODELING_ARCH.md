@@ -92,7 +92,7 @@ classDiagram
 
 ## Flow Graph Derivation
 
-The flow graph is **scoped** to a specific flow function (the `targetFlowId`). It is derived from the `ProjectAST` (defined in [03-AST-PARSING.md](03-AST-PARSING.md)) using these rules:
+The flow graph is **scoped** to a specific flow function (the `targetFlowId`). It is derived from the `ProjectAST` (defined in [03_AST_PARSING_ARCH.md](03_AST_PARSING_ARCH.md)) using these rules:
 
 1. **Graph Scope:** The builder starts at the function defined by `targetFlowId` (which defaults to the AST's `rootFlowId`).
 2. **Nodes:** The builder analyzes the code body of the target flow function. In a flow function, each line of code typically follows the pattern `{variable} = {function}({args})`. For every function called within the body, a ReactFlow node is generated. The `id`, `displayName` (or `name`), and `nodeType` map directly to the called function's declaration.
