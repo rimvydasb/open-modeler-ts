@@ -37,7 +37,7 @@ graph TB
         IDB["IndexedDB<br/>(Service 1 & 2)"]
     end
 
-    subgraph UserInterface["User Interface Layer (Cypress)"]
+    subgraph UserInterface["User Interface Layer"]
         CE["Code Editor<br/>(Service 2)"]
         FE["Flow Editor<br/>(Service 5)"]
     end

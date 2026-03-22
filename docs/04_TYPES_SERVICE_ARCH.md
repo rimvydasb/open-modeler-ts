@@ -10,9 +10,10 @@
 
 The Types Service acts as the **Sovereign Schema Registry** for the entire project. While AST Parsing (Service 3)
 performs the raw extraction of TypeScript constructs, the Types Service elevates these into a managed system-wide
-registry. 
+registry.
 
 It transitions types from "static file content" to "living schema entities." This service is responsible for:
+
 1. **Type Cataloging:** Indexing all interfaces and types across multiple project assets.
 2. **Schema Evolution:** Managing changes to types and notifying downstream consumers (Flow ports, Test inputs).
 3. **FFI Preparation:** Providing the Execution Engine with the metadata required for JSON-to-TypeScript marshalling.
@@ -66,8 +67,8 @@ classDiagram
     TypeRegistry *-- "0..*" ManagedType
     ManagedType *-- "0..*" PropertyInfo
     PropertyInfo *-- TypeReference
-    TypesService --> TypeRegistry : manages
-    TypesService ..> ManagedType : produces
+    TypesService --> TypeRegistry: manages
+    TypesService ..> ManagedType: produces
 ```
 
 ## Behavioral Diagram: Type Synchronization
@@ -82,21 +83,16 @@ sequenceDiagram
     participant TS as Types Service (Svc 4)
     participant FM as Flow Modeling (Svc 5)
     participant TEST as Testing (Svc 7)
-
     Note over IDB, TEST: Schema Refresh Cycle
     IDB ->> AST: source change detected
     AST ->> AST: parse declarations
     AST -->> TS: raw ProjectAST (types + functions)
-    
     TS ->> TS: extract ManagedTypes
     TS ->> TS: update TypeRegistry (reconcile diffs)
-    
     TS -->> FM: SchemaUpdateEvent
     FM ->> FM: refresh Node Ports based on new types
-    
     TS -->> TEST: SchemaUpdateEvent
     TEST ->> TEST: invalidate out-of-date test inputs
-    
     Note over TS, IDB: Persistence
     TS ->> TS: generate types.ts content
     TS ->> IDB: update types asset content
@@ -133,22 +129,22 @@ interface SchemaSnapshot {
 
 ### TypeRegistry (`types-registry.ts`)
 
-An in-memory (and occasionally persisted) store of all types. It ensures that when Service 5 needs a port for a 
-function, it gets the latest schema. It handles cross-asset resolution (e.g., a function in `main.ts` using an 
+An in-memory (and occasionally persisted) store of all types. It ensures that when Service 5 needs a port for a
+function, it gets the latest schema. It handles cross-asset resolution (e.g., a function in `main.ts` using an
 interface from `types.ts`).
 
 **Test strategy (Jest):** Verify cross-asset resolution and name collision handling.
 
 ### TypesService (`types-service.ts`)
 
-The primary façade. It consumes the `ProjectAST` from Service 3 and transforms the raw `InterfaceDeclaration` and 
+The primary façade. It consumes the `ProjectAST` from Service 3 and transforms the raw `InterfaceDeclaration` and
 `TypeAlias` objects into `ManagedType` entities. It also provides a hook for the UI to modify types manually.
 
 **Test strategy (Jest):** Reconcile AST changes → verify Registry updates → verify event emission.
 
 ### SchemaValidator (`schema-validator.ts`)
 
-Checks for structural errors in the type system that TypeScript might allow but visual modeling might not 
+Checks for structural errors in the type system that TypeScript might allow but visual modeling might not
 (e.g., circular dependencies that break the Flow UI).
 
 **Test strategy (Jest):** Provide circular and deeply nested types, assert correct warnings/errors.
