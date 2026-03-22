@@ -447,16 +447,17 @@ Full-featured code editor with TypeScript support.
                     <InputSection label="Inputs">
                         <JsonEditor value="{testInputs}"/>
                     </InputSection>
-                    <ExpectedSection label="Expected Output">
-                        <JsonEditor value="{expectedOutput}"/>
-                    </ExpectedSection>
+                    <AssertionsSection label="Assertions">
+                        <!-- List of assertions (e.g., deepEqual, propertyEquals) -->
+                        <AssertionRow type="deepEqual" expected="{...}"/>
+                    </AssertionsSection>
                 </TestCaseForm>
             </LeftPane>
             <RightPane>
                 <TestResultsPanel>
                     <ResultHeader status="pass|fail|pending"/>
                     <ActualOutput value="{actualOutput}"/>
-                    <DiffView expected="{expected}" actual="{actual}"/>
+                    <AssertionResultsList results="{assertionResults}"/>
                 </TestResultsPanel>
             </RightPane>
         </SplitPane>

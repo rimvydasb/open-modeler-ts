@@ -122,3 +122,13 @@ export function main() {
     renderLoanBalanceChart(schedule);
     renderLoanScheduleTable(schedule);
 }
+
+/**
+ * Decision service function
+ *
+ * @nodeType: flow
+ */
+export function decidePaymentLines(loanAmount: number, annualInterestRate: number, termMonths: number, startDate: Date): PaymentLine[] {
+    const monthlyPayment = calculateMonthlyPayment(loanAmount, annualInterestRate, termMonths);
+    return generateLoanSchedule(loanAmount, monthlyPayment, annualInterestRate, termMonths, startDate);
+}

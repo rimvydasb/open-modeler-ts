@@ -129,7 +129,7 @@ classDiagram
 
     TypesService --> TypesExtractor : delegates parsing
     TypesExtractor ..> ManagedType : produces
-    TypesExtractor --> "Service 3" : calls parseProject()
+    TypesExtractor --> Service3 : calls parseProject()
 
     AssetsService --> AssetValidator : validates
     AssetsService --> ImporterInterface : delegates import

@@ -9,13 +9,13 @@
 ## Overview
 
 The Testing Service manages the lifecycle of user-defined test cases: creation, execution, and reporting. Users
-define test cases with input data and expected outputs. The service executes them through the Execution Engine
-(Service 5) and compares actual results against assertions.
+define test cases with input data and a set of assertions. The service executes them through the Execution Engine
+(Service 5) and evaluates the actual results against these assertions.
 
 A test case targets a specific function in the project's source code. The user provides input parameters and defines
-one or more assertions (deep equality, property matching, or type checks) against the expected output. The test
-runner batches test cases into a `TestSuite`, executes each through the sandbox, and produces a `TestReport` with
-pass/fail status, execution times, and diff output for failures.
+one or more assertions (deep equality, property matching, or type checks). The test runner batches test cases into 
+a `TestSuite`, executes each through the sandbox, and produces a `TestReport` with pass/fail status, execution times, 
+and diff output for failed assertions.
 
 This service does not parse or transpile code — it delegates execution entirely to Service 5. It also persists test
 cases as part of the project (via Service 1's `StoredProject` assets with `kind: 'test'`).
@@ -39,7 +39,6 @@ classDiagram
         +string name
         +string? description
         +Record~string, unknown~ inputs
-        +unknown expectedOutput
         +TestAssertion[] assertions
     }
 
@@ -109,7 +108,7 @@ classDiagram
 
     TestCaseService ..> TestSuite : manages
     TestRunner ..> TestResult : produces
-    TestRunner --> "Service 5" : executes via
+    TestRunner --> Service5 : executes via
     TestReporter ..> TestReport : generates
 ```
 
@@ -126,7 +125,7 @@ sequenceDiagram
     participant IDB as StorageInterface
 
     Note over UI, IDB: Create Test Case
-    UI ->> Hook: createTestCase(suiteId, { name, inputs, expectedOutput, assertions })
+    UI ->> Hook: createTestCase(suiteId, { name, inputs, assertions })
     Hook ->> Svc: createTestCase(suiteId, input)
     Svc ->> Svc: generate ID, validate inputs
     Svc ->> IDB: save test suite
@@ -154,7 +153,7 @@ sequenceDiagram
 
     alt failures exist
         UI ->> UI: highlight failed test cases
-        UI ->> UI: show diff (expected vs actual)
+        UI ->> UI: show failure details (expected vs actual for assertions)
     end
 ```
 
@@ -173,9 +172,8 @@ interface TestCase {
     id: string;
     name: string; // e.g. "Standard 30-year mortgage"
     description?: string;
-    inputs: Record<string, unknown>; // Function parameters
-    expectedOutput: unknown; // Expected return value
-    assertions: TestAssertion[]; // How to compare actual vs expected
+    inputs: Record<string, any>; // Function parameters mapping: name -> JSON value
+    assertions: TestAssertion[]; // How to validate actual output
 }
 
 type AssertionType = 'deepEqual' | 'propertyEquals' | 'typeOf' | 'contains' | 'greaterThan' | 'lessThan';
