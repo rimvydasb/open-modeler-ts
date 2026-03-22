@@ -9,7 +9,7 @@
 ## Overview
 
 The Types Editor is a **GUI component** that provides a structured visual interface for managing the project's type
-definitions — similar to FICO Business Terms Editor. It is **not** a standalone service — it reads type information from
+definitions. It is **not** a standalone service — it reads type information from
 the AST Parsing Service (Service 3) and writes changes back to the `types.ts` asset through the same service.
 
 **Architectural position:** The Types Editor is a UI view (`components/views/types-editor/`) with a supporting React
